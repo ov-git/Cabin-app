@@ -1,23 +1,21 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit'
-import { cabinApi } from '../../api/api'
+import { customerApi } from '../../api/api'
 import { type ThunkState } from '../store'
 import { createThunkFactory, sliceHelper } from '@kallinen/thunk-utility'
 import {
-    ExampleCustomerResponseDto,
-    ExampleResponseDto,
-} from '../../types/endpointTypes'
-import {
-    CRUD,
     CustomerHeader,
+    CRUD,
     Pagination,
     Sorting,
 } from '../../types/frontendTypes'
+import { CustomerResponseDto } from '../../types/endpointTypes'
+import { uiActions } from './ui'
 
 const { createThunks, apiThunkFor } = createThunkFactory<ThunkState>()
 
 export interface CustomerState {
     loading: boolean
-    customers: ExampleCustomerResponseDto[]
+    customers: CustomerResponseDto[]
     selectedCustomerId: number
     selectedCustomerOperation: CRUD | null
     sorting: Sorting
@@ -31,14 +29,70 @@ const initialState: CustomerState = {
     selectedCustomerOperation: null,
     sorting: {
         order: 'desc',
-        orderBy: CustomerHeader.Name,
+        orderBy: CustomerHeader.FirstName,
     },
     pagination: { count: 10, limit: 10, offset: 0, total: 0 },
 }
 
-const thunks = createThunks(
+export const thunks = createThunks(
     {
-        getCustomers: apiThunkFor(cabinApi.getCustomers)(),
+        getCustomers: apiThunkFor(customerApi.getCustomers)(),
+        createCustomer: async (
+            customer: CustomerResponseDto,
+            { rejectWithValue, dispatch }
+        ) => {
+            const response = await customerApi.createCustomer(customer)
+            if (response.ok) {
+                dispatch(
+                    uiActions.setNotification({
+                        message: 'Asiakas luotu',
+                        severity: 'success',
+                    })
+                )
+                dispatch(customerActions.resetSelectedCustomerId())
+                dispatch(thunks.getCustomers())
+                return response.data
+            } else return rejectWithValue('Asiakkaan luominen epäonnistui.')
+        },
+        updateCustomer: async (
+            customer: CustomerResponseDto,
+            { rejectWithValue, dispatch }
+        ) => {
+            const response = await customerApi.updateCustomer(
+                customer.id,
+                customer
+            )
+            if (response.ok) {
+                dispatch(
+                    uiActions.setNotification({
+                        message: response.data,
+                        severity: 'success',
+                    })
+                )
+                dispatch(customerActions.resetSelectedCustomerId())
+                dispatch(thunks.getCustomers())
+                return response.data
+            } else return rejectWithValue('Asiakkaan muokkaus epäonnistui.')
+        },
+        deleteCustomer: async (
+            _: void,
+            { rejectWithValue, dispatch, getState }
+        ) => {
+            const selected = getState().customer.selectedCustomerId
+            const response = await customerApi.deleteCustomer(selected)
+
+            if (response.ok) {
+                dispatch(
+                    uiActions.setNotification({
+                        message: response.data,
+                        severity: 'success',
+                    })
+                )
+                dispatch(customerActions.resetSelectedCustomerId())
+                dispatch(thunks.getCustomers())
+                return response.data
+            } else return rejectWithValue('Asiakkaan poisto epäonnistui.')
+        },
     },
     'customer'
 )
@@ -74,16 +128,33 @@ const customer = createSlice({
     },
     extraReducers: (builder) => {
         const util = sliceHelper(builder, thunks)
+
         util.mapThunksToState('fulfilled', {
             getCustomers: 'customers',
         })
-        builder.addMatcher(isAnyOf(thunks.getCustomers.pending), (state) => {
-            state.loading = true
-        })
+
+        builder.addMatcher(
+            isAnyOf(
+                thunks.getCustomers.pending,
+                thunks.createCustomer.pending,
+                thunks.updateCustomer.pending,
+                thunks.deleteCustomer.pending
+            ),
+            (state) => {
+                state.loading = true
+            }
+        )
+
         builder.addMatcher(
             isAnyOf(
                 thunks.getCustomers.rejected,
-                thunks.getCustomers.fulfilled
+                thunks.getCustomers.fulfilled,
+                thunks.createCustomer.rejected,
+                thunks.createCustomer.fulfilled,
+                thunks.updateCustomer.rejected,
+                thunks.updateCustomer.fulfilled,
+                thunks.deleteCustomer.rejected,
+                thunks.deleteCustomer.fulfilled
             ),
             (state) => {
                 state.loading = false

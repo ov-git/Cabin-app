@@ -5,7 +5,8 @@ import { ScreenWrapper } from './common/ScreenWrapper'
 import {
     AppRoutes,
     CRUD,
-    CustomerHeader,
+    customerSortableHeaders,
+    getCellText,
     getCustomerLabel,
     Pagination as PaginationType,
 } from '../types/frontendTypes'
@@ -14,12 +15,10 @@ import { color } from '../utils/color'
 import { SortableColumnHeader } from './common/SortableColumnHeader'
 import { Pagination } from './common/Pagination'
 import { CustomModal } from './common/CustomModal'
-import { Form } from 'react-final-form'
-import { TextField } from 'mui-rff'
-import AddBoxIcon from '@mui/icons-material/AddBox'
 import { Add, Cancel, Delete, Edit } from '@mui/icons-material'
+import { CustomerForm, customerFormFields } from '../forms/CustomerForm'
 
-const gridTemplateColumns = '1fr 1fr 1fr 40px 40px'
+const gridTemplateColumns = '1fr 1fr 1fr 1fr 40px 40px'
 
 export const Customer: React.FC = () => {
     const dispatch = useAppDispatch()
@@ -99,24 +98,15 @@ const List: React.FC = () => {
                 display={'grid'}
                 gridTemplateColumns={gridTemplateColumns}
             >
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={customerActions.setSorting}
-                    columnIdentifier={CustomerHeader.Name}
-                    label="Nimi"
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={customerActions.setSorting}
-                    columnIdentifier={CustomerHeader.Phone}
-                    label="Puhelin"
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={customerActions.setSorting}
-                    columnIdentifier={CustomerHeader.Email}
-                    label="Sähköposti"
-                />
+                {customerSortableHeaders.map((header) => (
+                    <SortableColumnHeader
+                        key={header}
+                        sorting={sorting}
+                        setSorting={customerActions.setSorting}
+                        columnIdentifier={header}
+                        label={getCustomerLabel(header)}
+                    />
+                ))}
                 <Box />
                 <Box />
             </Box>
@@ -131,9 +121,15 @@ const List: React.FC = () => {
                     alignItems={'center'}
                     p={1}
                 >
-                    <Cell text={customer.name} />
-                    <Cell text={customer.phone} />
-                    <Cell text={customer.email} />
+                    {customerSortableHeaders.map((header) => (
+                        <Cell
+                            key={header}
+                            text={getCellText(
+                                customer[header],
+                                customerFormFields[header]?.type
+                            )}
+                        />
+                    ))}
                     <IconButton
                         onClick={handleSelect(customer.id, 'update')}
                         size="small"
@@ -160,98 +156,6 @@ const Cell: React.FC<{ text: string }> = ({ text }) => {
     return <Typography fontSize={12}>{text}</Typography>
 }
 
-const CustomerForm: React.FC = () => {
-    const customers = useAppSelector((state) => state.customer.customers)
-    const selectedCustomerId = useAppSelector(
-        (state) => state.customer.selectedCustomerId
-    )
-    const dispatch = useAppDispatch()
-    const handleCancel = () => {
-        dispatch(customerActions.resetSelectedCustomerId())
-    }
-    return (
-        <Form
-            onSubmit={() => console.log}
-            initialValues={customers.find((c) => c.id === selectedCustomerId)}
-            render={({ handleSubmit, form }) => {
-                return (
-                    <form
-                        style={{ flex: 1, display: 'flex' }}
-                        onSubmit={handleSubmit}
-                    >
-                        <Box
-                            flex={1}
-                            display={'flex'}
-                            flexDirection={'column'}
-                            justifyContent={'space-between'}
-                            gap={2}
-                        >
-                            {Object.values(CustomerHeader).map((h) => (
-                                <TextField
-                                    key={h}
-                                    label={getCustomerLabel(h)}
-                                    name={h}
-                                    id={h}
-                                    size="small"
-                                    type="text"
-                                />
-                            ))}
-                            <Box alignSelf={'end'}>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    color="error"
-                                    onClick={handleCancel}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <Cancel
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Peruuta</Typography>
-                                </Button>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <AddBoxIcon
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Tallenna</Typography>
-                                </Button>
-                            </Box>
-                        </Box>
-                    </form>
-                )
-            }}
-        />
-    )
-}
-
 const CustomerDeletion: React.FC = () => {
     const customers = useAppSelector((state) => state.customer.customers)
     const dispatch = useAppDispatch()
@@ -274,7 +178,8 @@ const CustomerDeletion: React.FC = () => {
             justifyContent={'space-between'}
         >
             <Typography>
-                Haluatko varmasti poistaa asiakkaan "{customer.name}?"
+                Haluatko varmasti poistaa asiakkaan "
+                {customer.firstName + ' ' + customer.lastName}?"
             </Typography>
             <Box display={'flex'} gap={1}>
                 <Button

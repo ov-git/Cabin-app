@@ -4,22 +4,21 @@ import { Box, Button, IconButton, Typography } from '@mui/material'
 import { ScreenWrapper } from './common/ScreenWrapper'
 import {
     AppRoutes,
-    CabinHeader,
+    cabinSortableHeaders,
     CRUD,
     getCabinLabel,
+    getCellText,
     Pagination as PaginationType,
 } from '../types/frontendTypes'
 import { cabinActions, cabinThunks } from '../redux/slices/cabin'
 import { SortableColumnHeader } from './common/SortableColumnHeader'
 import { color } from '../utils/color'
 import { Pagination } from './common/Pagination'
-import { Form } from 'react-final-form'
-import { TextField } from 'mui-rff'
-import AddBoxIcon from '@mui/icons-material/AddBox'
 import { CustomModal } from './common/CustomModal'
 import { Add, Cancel, Delete, Edit } from '@mui/icons-material'
+import { CabinForm, cabinFormFields } from '../forms/CabinForm'
 
-const gridTemplateColumns = '1fr 1fr 1fr 40px 40px'
+const gridTemplateColumns = '2.5fr 2fr 1fr 1fr .5fr .5fr 3fr 1fr .8fr 40px 40px'
 
 export const Cabin: React.FC = () => {
     const dispatch = useAppDispatch()
@@ -93,24 +92,16 @@ const List: React.FC = () => {
                 display={'grid'}
                 gridTemplateColumns={gridTemplateColumns}
             >
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={cabinActions.setSorting}
-                    columnIdentifier={CabinHeader.Name}
-                    label="Nimi"
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={cabinActions.setSorting}
-                    columnIdentifier={CabinHeader.Size}
-                    label="Koko"
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={cabinActions.setSorting}
-                    columnIdentifier={CabinHeader.PricePerDay}
-                    label="Hinta"
-                />
+                {cabinSortableHeaders.map((header) => (
+                    <SortableColumnHeader
+                        key={header}
+                        sorting={sorting}
+                        setSorting={cabinActions.setSorting}
+                        columnIdentifier={header}
+                        label={getCabinLabel(header)}
+                    />
+                ))}
+
                 <Box />
                 <Box />
             </Box>
@@ -125,9 +116,15 @@ const List: React.FC = () => {
                     alignItems={'center'}
                     p={1}
                 >
-                    <Cell text={cabin.name} />
-                    <Cell text="50m2" />
-                    <Cell text="35€" />
+                    {cabinSortableHeaders.map((header) => (
+                        <Cell
+                            key={header}
+                            text={getCellText(
+                                cabin[header],
+                                cabinFormFields[header]?.type
+                            )}
+                        />
+                    ))}
                     <IconButton
                         onClick={handleSelect(cabin.id, 'update')}
                         size="small"
@@ -154,98 +151,6 @@ const Cell: React.FC<{ text: string }> = ({ text }) => {
     return <Typography fontSize={12}>{text}</Typography>
 }
 
-const CabinForm: React.FC = () => {
-    const cabins = useAppSelector((state) => state.cabin.cabins)
-    const selectedCabinId = useAppSelector(
-        (state) => state.cabin.selectedCabinId
-    )
-    const dispatch = useAppDispatch()
-    const handleCancel = () => {
-        dispatch(cabinActions.resetSelectedCabinId())
-    }
-    return (
-        <Form
-            onSubmit={() => console.log}
-            initialValues={cabins.find((c) => c.id === selectedCabinId)}
-            render={({ handleSubmit, form }) => {
-                return (
-                    <form
-                        style={{ flex: 1, display: 'flex' }}
-                        onSubmit={handleSubmit}
-                    >
-                        <Box
-                            flex={1}
-                            display={'flex'}
-                            flexDirection={'column'}
-                            justifyContent={'space-between'}
-                            gap={2}
-                        >
-                            {Object.values(CabinHeader).map((h) => (
-                                <TextField
-                                    key={h}
-                                    label={getCabinLabel(h)}
-                                    name={h}
-                                    id={h}
-                                    size="small"
-                                    type="text"
-                                />
-                            ))}
-                            <Box alignSelf={'end'}>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    color="error"
-                                    onClick={handleCancel}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <Cancel
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Peruuta</Typography>
-                                </Button>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <AddBoxIcon
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Tallenna</Typography>
-                                </Button>
-                            </Box>
-                        </Box>
-                    </form>
-                )
-            }}
-        />
-    )
-}
-
 const CabinDeletion: React.FC = () => {
     const cabins = useAppSelector((state) => state.cabin.cabins)
     const dispatch = useAppDispatch()
@@ -259,6 +164,8 @@ const CabinDeletion: React.FC = () => {
 
     const handleClickCancel = () =>
         dispatch(cabinActions.resetSelectedCabinId())
+
+    const handleDelete = () => dispatch(cabinThunks.deleteCabin())
     return (
         <Box
             display={'flex'}
@@ -266,6 +173,7 @@ const CabinDeletion: React.FC = () => {
             alignItems={'center'}
             height={'100%'}
             justifyContent={'space-between'}
+            flex={1}
         >
             <Typography>
                 Haluatko varmasti poistaa mökin "{cabin.name}?"
@@ -283,6 +191,7 @@ const CabinDeletion: React.FC = () => {
                     variant="outlined"
                     color="secondary"
                     startIcon={<Delete />}
+                    onClick={handleDelete}
                 >
                     Poista
                 </Button>

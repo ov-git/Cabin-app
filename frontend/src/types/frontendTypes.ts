@@ -4,6 +4,7 @@ export enum AppRoutes {
     Customer = '/customer',
     Invoice = '/invoice',
     Reservation = '/reservation',
+    User = '/user',
     Rest = '/*',
 }
 
@@ -23,85 +24,178 @@ export interface Pagination {
 
 export enum CabinHeader {
     Name = 'name',
-    Size = 'size',
-    PricePerDay = 'pricePerDay',
+    Location = 'location',
+    PricePerNight = 'pricePerNight',
+    MaxGuests = 'maxGuests',
+    Bedrooms = 'bedrooms',
+    Bathrooms = 'bathrooms',
+    Amenities = 'amenities',
+    Available = 'available',
+    Rating = 'rating',
 }
 
-export const getCabinLabel = (header: CabinHeader) => {
-    switch (header) {
-        case CabinHeader.Name:
-            return 'Nimi'
-        case CabinHeader.Size:
-            return 'Koko'
-        case CabinHeader.PricePerDay:
-            return 'Hinta'
+export const cabinSortableHeaders = [
+    CabinHeader.Name,
+    CabinHeader.Location,
+    CabinHeader.PricePerNight,
+    CabinHeader.MaxGuests,
+    CabinHeader.Bedrooms,
+    CabinHeader.Bathrooms,
+    CabinHeader.Amenities,
+    CabinHeader.Available,
+    CabinHeader.Rating,
+] as const
 
-        default:
-            return ''
-    }
+export const cabinLabels: Record<CabinHeader, string> = {
+    [CabinHeader.Name]: 'Nimi',
+    [CabinHeader.Location]: 'Sijainti',
+    [CabinHeader.PricePerNight]: 'Hinta / yö',
+    [CabinHeader.MaxGuests]: 'Max hlö',
+    [CabinHeader.Bedrooms]: 'MH',
+    [CabinHeader.Bathrooms]: 'KH',
+    [CabinHeader.Amenities]: 'Mukavuudet',
+    [CabinHeader.Available]: 'Saatavuus',
+    [CabinHeader.Rating]: 'Arvostelu',
 }
+
+export const getCabinLabel = (header: CabinHeader) => cabinLabels[header]
 
 export enum CustomerHeader {
-    Name = 'name',
+    FirstName = 'firstName',
+    LastName = 'lastName',
     Email = 'email',
     Phone = 'phone',
 }
 
-export const getCustomerLabel = (header: CustomerHeader) => {
-    switch (header) {
-        case CustomerHeader.Name:
-            return 'Nimi'
-        case CustomerHeader.Email:
-            return 'Sähköposti'
-        case CustomerHeader.Phone:
-            return 'Puhelin'
+export const customerSortableHeaders = [
+    CustomerHeader.FirstName,
+    CustomerHeader.LastName,
+    CustomerHeader.Email,
+    CustomerHeader.Phone,
+] as const
 
-        default:
-            return ''
-    }
+export const customerLabels: Record<CustomerHeader, string> = {
+    [CustomerHeader.FirstName]: 'Etunimi',
+    [CustomerHeader.LastName]: 'Sukunimi',
+    [CustomerHeader.Email]: 'Sähköposti',
+    [CustomerHeader.Phone]: 'Puhelin',
 }
+
+export const getCustomerLabel = (header: CustomerHeader) =>
+    customerLabels[header]
 
 export enum InvoiceHeader {
-    Date = 'date',
-    Identifier = 'identifier',
-    TotalAmount = 'totalAmount',
+    CustomerId = 'customerId',
+    ReservationId = 'reservationId',
+    Amount = 'amount',
+    Status = 'status',
+    IssueDate = 'issueDate',
+    DueDate = 'dueDate',
 }
 
-export const getInvoiceLabel = (header: InvoiceHeader) => {
-    switch (header) {
-        case InvoiceHeader.Date:
-            return 'Päivämäärä'
-        case InvoiceHeader.Identifier:
-            return 'Laskun tunniste'
-        case InvoiceHeader.TotalAmount:
-            return 'Loppusumma'
+export const invoiceSortableHeaders = [
+    InvoiceHeader.CustomerId,
+    InvoiceHeader.ReservationId,
+    InvoiceHeader.Amount,
+    InvoiceHeader.Status,
+    InvoiceHeader.IssueDate,
+    InvoiceHeader.DueDate,
+] as const
 
-        default:
-            return ''
-    }
+export const invoiceLabels: Record<InvoiceHeader, string> = {
+    [InvoiceHeader.CustomerId]: 'Asiakas',
+    [InvoiceHeader.ReservationId]: 'Varaus',
+    [InvoiceHeader.Amount]: 'Summa',
+    [InvoiceHeader.Status]: 'Tila',
+    [InvoiceHeader.IssueDate]: 'Päiväys',
+    [InvoiceHeader.DueDate]: 'Eräpäivä',
 }
+
+export const getInvoiceLabel = (header: InvoiceHeader) => invoiceLabels[header]
 
 export enum ReservationHeader {
+    CustomerId = 'customerId',
+    CabinId = 'cabinId',
     StartDate = 'startDate',
     EndDate = 'endDate',
-    ReservationNumber = 'reservationNumber',
+    Status = 'status',
 }
 
-export const getReservationLabel = (header: ReservationHeader) => {
-    switch (header) {
-        case ReservationHeader.ReservationNumber:
-            return 'Varausnumero'
-        case ReservationHeader.StartDate:
-            return 'Alkupvm.'
-        case ReservationHeader.EndDate:
-            return 'Loppupvm.'
+export const reservationSortableHeaders = [
+    ReservationHeader.CustomerId,
+    ReservationHeader.CabinId,
+    ReservationHeader.StartDate,
+    ReservationHeader.EndDate,
+    ReservationHeader.Status,
+] as const
 
-        default:
-            return ''
-    }
+export const reservationLabels: Record<ReservationHeader, string> = {
+    [ReservationHeader.CustomerId]: 'Asiakas',
+    [ReservationHeader.CabinId]: 'Mökki',
+    [ReservationHeader.StartDate]: 'Alkaa',
+    [ReservationHeader.EndDate]: 'Päättyy',
+    [ReservationHeader.Status]: 'Tila',
 }
+
+export const getReservationLabel = (header: ReservationHeader) =>
+    reservationLabels[header]
+
+export enum UserHeader {
+    Username = 'username',
+    Email = 'email',
+    Role = 'role',
+    Active = 'active',
+}
+
+export const userSortableHeaders = [
+    UserHeader.Username,
+    UserHeader.Email,
+    UserHeader.Role,
+    UserHeader.Active,
+] as const
+
+export const userLabels: Record<UserHeader, string> = {
+    [UserHeader.Username]: 'Käyttäjänimi',
+    [UserHeader.Email]: 'Sähköposti',
+    [UserHeader.Role]: 'Rooli',
+    [UserHeader.Active]: 'Aktiivinen',
+}
+
+export const getUserLabel = (header: UserHeader) => userLabels[header]
 
 export interface NotificationMessage {
     message: string
     severity: 'info' | 'error' | 'success'
+}
+
+export type FormFieldType = 'text' | 'number' | 'date' | 'boolean' | 'select'
+
+export interface SelectOption {
+    label: string
+    value: string
+}
+
+export interface FormFieldConfig {
+    type: FormFieldType
+    options?: SelectOption[]
+}
+
+export const getCellText = (value: unknown, type?: FormFieldType): string => {
+    if (value == null) {
+        return ''
+    }
+
+    if (type === 'boolean') {
+        return value ? 'Kyllä' : 'Ei'
+    }
+
+    if (type === 'date') {
+        return String(value)
+    }
+
+    if (Array.isArray(value)) {
+        return value.join(', ')
+    }
+
+    return String(value)
 }

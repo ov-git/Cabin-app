@@ -1,30 +1,25 @@
+import { ApiResponse, createApi } from '@kallinen/openapi-axios-client'
 import {
-    ApiOkResponse,
-    ApiResponse,
-    createApi,
-} from '@kallinen/openapi-axios-client'
-import {
-    ExampleCabinResponseDto,
-    ExampleCustomerResponseDto,
-    ExampleInvoiceResponseDto,
-    ExampleReservationResponseDto,
-    ExampleResponseDto,
+    CabinResponseDto,
+    CustomerResponseDto,
+    InvoiceResponseDto,
+    ReservationResponseDto,
+    UserResponseDto,
 } from '../types/endpointTypes'
 import { store } from '../redux/store'
 import { uiActions } from '../redux/slices/ui'
-import { CabinHeader } from '../types/frontendTypes'
 
 const api = createApi({
-    url: 'localhost:3001',
+    url: 'http://localhost:8080/api',
 })
 
 api.interceptors.response.use((response) => {
-    const res = response as unknown as ApiResponse<any>
+    const res = response as unknown as ApiResponse<any, any>
 
     if (!res.ok) {
         store.dispatch(
             uiActions.setNotification({
-                message: `Jotain meni pieleen (${res.status})`,
+                message: `Jotain meni pieleen (${res.originalError.message})`,
                 severity: 'error',
             })
         )
@@ -33,161 +28,152 @@ api.interceptors.response.use((response) => {
     return response
 })
 
-const createMockResponse = async () => {
-    return await new Promise<ApiResponse<ExampleResponseDto[], any>>(
-        (resolve, _reject) => {
-            setTimeout(() => {
-                resolve({
-                    ok: true,
-                    data: [
-                        { id: 1, label: 'Mock data 1' },
-                        { id: 2, label: 'Mock data 2' },
-                        { id: 3, label: 'Mock data 3' },
-                        { id: 4, label: 'Mock data 4' },
-                    ],
-                } as ApiOkResponse<ExampleResponseDto[]>)
-            }, 1000)
-        }
-    )
+const getCabins = async (): Promise<ApiResponse<CabinResponseDto[], any>> => {
+    return await api.get<CabinResponseDto[]>('/cabin')
 }
 
-const createMockCabinResponse = async () => {
-    return await new Promise<ApiResponse<ExampleCabinResponseDto[], any>>(
-        (resolve, _reject) => {
-            setTimeout(() => {
-                resolve({
-                    ok: true,
-                    data: [
-                        {
-                            id: 1,
-                            name: 'Test',
-                            pricePerDay: '150€',
-                            size: '65m2',
-                        },
-                        {
-                            id: 2,
-                            name: 'Test 2',
-                            pricePerDay: '170€',
-                            size: '45m2',
-                        },
-                    ],
-                } as ApiOkResponse<ExampleCabinResponseDto[]>)
-            }, 1000)
-        }
-    )
+const createCabin = async (
+    payload: CabinResponseDto
+): Promise<ApiResponse<CabinResponseDto, any>> => {
+    return await api.post<CabinResponseDto>('/cabin', payload)
 }
 
-const createMockCustomerResponse = async () => {
-    return await new Promise<ApiResponse<ExampleCustomerResponseDto[], any>>(
-        (resolve, _reject) => {
-            setTimeout(() => {
-                resolve({
-                    ok: true,
-                    data: [
-                        {
-                            id: 1,
-                            name: 'Timo Testaaja',
-                            email: 'test@test.fi',
-                            phone: '0404040404',
-                        },
-                        {
-                            id: 2,
-                            name: 'Teemu Testeri',
-                            email: 'test@test2.com',
-                            phone: '0403040304',
-                        },
-                    ],
-                } as ApiOkResponse<ExampleCustomerResponseDto[]>)
-            }, 1000)
-        }
-    )
+const updateCabin = async (
+    id: number,
+    payload: CabinResponseDto
+): Promise<ApiResponse<string, any>> => {
+    return await api.put<string>(`/cabin/${id}`, payload)
 }
 
-const createMockInvoiceResponse = async () => {
-    return await new Promise<ApiResponse<ExampleInvoiceResponseDto[], any>>(
-        (resolve, _reject) => {
-            setTimeout(() => {
-                resolve({
-                    ok: true,
-                    data: [
-                        {
-                            id: 1,
-                            date: '12.11.2024',
-                            identifier: 'ABC-123456',
-                            totalAmount: '132.56',
-                        },
-                        {
-                            id: 2,
-                            date: '14.11.2024',
-                            identifier: 'EFG-123456',
-                            totalAmount: '172.33',
-                        },
-                    ],
-                } as ApiOkResponse<ExampleInvoiceResponseDto[]>)
-            }, 1000)
-        }
-    )
-}
-
-const createMockReservationResponse = async () => {
-    return await new Promise<ApiResponse<ExampleReservationResponseDto[], any>>(
-        (resolve, _reject) => {
-            setTimeout(() => {
-                resolve({
-                    ok: true,
-                    data: [
-                        {
-                            id: 1,
-                            reservationNumber: 'ABCD12345',
-                            startDate: '13.11.2025',
-                            endDate: '15.11.2025',
-                        },
-                        {
-                            id: 2,
-                            reservationNumber: 'AZXD12345',
-                            startDate: '13.12.2025',
-                            endDate: '15.12.2025',
-                        },
-                    ],
-                } as ApiOkResponse<ExampleReservationResponseDto[]>)
-            }, 1000)
-        }
-    )
-}
-
-const getCabins = async (): Promise<
-    ApiResponse<ExampleCabinResponseDto[], any>
-> => {
-    //mocking the behaviour before we have the actual endpoints to use
-    return await createMockCabinResponse()
+const deleteCabin = async (id: number): Promise<ApiResponse<string, any>> => {
+    return await api.delete<string>(`/cabin/${id}`)
 }
 
 const getCustomers = async (): Promise<
-    ApiResponse<ExampleCustomerResponseDto[], any>
+    ApiResponse<CustomerResponseDto[], any>
 > => {
-    //mocking the behaviour before we have the actual endpoints to use
-    return await createMockCustomerResponse()
+    return await api.get<CustomerResponseDto[]>('/customer')
+}
+
+const createCustomer = async (
+    payload: CustomerResponseDto
+): Promise<ApiResponse<CustomerResponseDto, any>> => {
+    return await api.post<CustomerResponseDto>('/customer', payload)
+}
+
+const updateCustomer = async (
+    id: number,
+    payload: CustomerResponseDto
+): Promise<ApiResponse<string, any>> => {
+    return await api.put<string>(`/customer/${id}`, payload)
+}
+
+const deleteCustomer = async (
+    id: number
+): Promise<ApiResponse<string, any>> => {
+    return await api.delete<string>(`/customer/${id}`)
 }
 
 const getInvoices = async (): Promise<
-    ApiResponse<ExampleInvoiceResponseDto[], any>
+    ApiResponse<InvoiceResponseDto[], any>
 > => {
-    //mocking the behaviour before we have the actual endpoints to use
-    return await createMockInvoiceResponse()
-    //return await api.get<{ id: number; label: string }[]>('/invoice')
+    return await api.get<InvoiceResponseDto[]>('/invoice')
+}
+
+const createInvoice = async (
+    payload: InvoiceResponseDto
+): Promise<ApiResponse<InvoiceResponseDto, any>> => {
+    return await api.post<InvoiceResponseDto>('/invoice', payload)
+}
+
+const updateInvoice = async (
+    id: number,
+    payload: InvoiceResponseDto
+): Promise<ApiResponse<string, any>> => {
+    return await api.put<string>(`/invoice/${id}`, payload)
+}
+
+const deleteInvoice = async (id: number): Promise<ApiResponse<string, any>> => {
+    return await api.delete<string>(`/invoice/${id}`)
 }
 
 const getReservations = async (): Promise<
-    ApiResponse<ExampleReservationResponseDto[], any>
+    ApiResponse<ReservationResponseDto[], any>
 > => {
-    //mocking the behaviour before we have the actual endpoints to use
-    return await createMockReservationResponse()
-    //return await api.get<{ id: number; label: string }[]>('/reservation')
+    return await api.get<ReservationResponseDto[]>('/reservation')
+}
+
+const createReservation = async (
+    payload: ReservationResponseDto
+): Promise<ApiResponse<ReservationResponseDto, any>> => {
+    return await api.post<ReservationResponseDto>('/reservation', payload)
+}
+
+const updateReservation = async (
+    id: number,
+    payload: ReservationResponseDto
+): Promise<ApiResponse<string, any>> => {
+    return await api.put<string>(`/reservation/${id}`, payload)
+}
+
+const deleteReservation = async (
+    id: number
+): Promise<ApiResponse<string, any>> => {
+    return await api.delete<string>(`/reservation/${id}`)
+}
+
+const getUsers = async (): Promise<ApiResponse<UserResponseDto[], any>> => {
+    return await api.get<UserResponseDto[]>('/user')
+}
+
+const createUser = async (
+    payload: UserResponseDto
+): Promise<ApiResponse<UserResponseDto, any>> => {
+    return await api.post<UserResponseDto>('/user', payload)
+}
+
+const updateUser = async (
+    id: number,
+    payload: UserResponseDto
+): Promise<ApiResponse<string, any>> => {
+    return await api.put<string>(`/user/${id}`, payload)
+}
+
+const deleteUser = async (id: number): Promise<ApiResponse<string, any>> => {
+    return await api.delete<string>(`/user/${id}`)
 }
 
 export const cabinApi = {
     getCabins,
+    createCabin,
+    updateCabin,
+    deleteCabin,
+}
+
+export const customerApi = {
     getCustomers,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+}
+
+export const invoiceApi = {
     getInvoices,
+    createInvoice,
+    updateInvoice,
+    deleteInvoice,
+}
+
+export const reservationApi = {
     getReservations,
+    createReservation,
+    updateReservation,
+    deleteReservation,
+}
+
+export const userApi = {
+    getUsers,
+    createUser,
+    updateUser,
+    deleteUser,
 }
