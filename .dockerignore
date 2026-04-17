@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Build output
+target/
+build/
+
+# Node (if frontend exists)
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS junk
+.DS_Store
+Thumbs.db
+cd ..
+# Environment / secrets
+.env
+.env.*
+
+# Logs
+*.log
+
+# Docker files
+docker-compose.yml
+Dockerfile
+
+# Misc
+*.md
