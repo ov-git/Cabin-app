@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Lakeside Retreat",
+    "location": "Lapland, Finland",
+    "pricePerNight": 120,
+    "maxGuests": 4,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "amenities": ["WiFi", "Sauna", "Fireplace", "Lake View"],
+    "available": true,
+    "rating": 4.7
+  },
+  {
+    "id": 2,
+    "name": "Arctic Glass Cabin",
+    "location": "Rovaniemi, Finland",
+    "pricePerNight": 250,
+    "maxGuests": 2,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "amenities": ["WiFi", "Glass Roof", "Northern Lights View"],
+    "available": true,
+    "rating": 4.9
+  },
+  {
+    "id": 3,
+    "name": "Forest Hideaway",
+    "location": "Kuusamo, Finland",
+    "pricePerNight": 90,
+    "maxGuests": 3,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "amenities": ["Fireplace", "Hiking Trails", "Pet Friendly"],
+    "available": false,
+    "rating": 4.5
+  },
+  {
+    "id": 4,
+    "name": "Luxury Log Villa",
+    "location": "Levi, Finland",
+    "pricePerNight": 320,
+    "maxGuests": 8,
+    "bedrooms": 4,
+    "bathrooms": 2,
+    "amenities": ["Sauna", "Hot Tub", "Ski-in/Ski-out", "WiFi"],
+    "available": true,
+    "rating": 4.8
+  },
+  {
+    "id": 5,
+    "name": "Cozy Riverside Cabin",
+    "location": "Savonlinna, Finland",
+    "pricePerNight": 110,
+    "maxGuests": 5,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "amenities": ["Sauna", "River View", "BBQ Grill"],
+    "available": true,
+    "rating": 4.6
+  }
+]
