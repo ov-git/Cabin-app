@@ -1,0 +1,13 @@
+#root {
+    margin: 0;
+    padding: 0;
+    height: calc(100vh - 15px);
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+
+body {
+    flex: 1;
+}
