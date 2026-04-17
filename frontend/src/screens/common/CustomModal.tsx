@@ -20,8 +20,9 @@ export const CustomModal: React.FC<Props> = ({
                     position={'absolute'}
                     top={'50%'}
                     left={'50%'}
-                    height={operation === 'delete' ? 100 : 300}
+                    minHeight={100}
                     bgcolor={color.white}
+                    maxHeight={800}
                     border={`1px solid ${
                         operation === 'delete' ? 'red' : color.concrete
                     }`}
@@ -33,9 +34,12 @@ export const CustomModal: React.FC<Props> = ({
                     sx={{
                         transform: 'translate(-50%, -50%)',
                     }}
-                >{operation !== 'delete' && (
-                    <Typography mb={3} variant='h4'>{operation === 'update' ? 'Muokkaa' : 'Lisää uusi'}</Typography>
-                )}
+                >
+                    {operation !== 'delete' && (
+                        <Typography mb={3} variant="h4">
+                            {operation === 'update' ? 'Muokkaa' : 'Lisää uusi'}
+                        </Typography>
+                    )}
                     {children}
                 </Box>
             }

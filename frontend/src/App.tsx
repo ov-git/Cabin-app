@@ -30,7 +30,7 @@ function App() {
                     sx={{
                         display: 'flex',
                         flex: 1,
-                        minWidth: 1200,
+                        minWidth: 1400,
                         border: `1px solid ${color.primaryMain}`,
                         backgroundColor: color.background,
                         margin: '0 auto',

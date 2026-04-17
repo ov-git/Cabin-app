@@ -1,20 +1,21 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit'
-import { cabinApi } from '../../api/api'
+import { invoiceApi } from '../../api/api'
 import { type ThunkState } from '../store'
 import { createThunkFactory, sliceHelper } from '@kallinen/thunk-utility'
-import { ExampleInvoiceResponseDto } from '../../types/endpointTypes'
 import {
-    CRUD,
     InvoiceHeader,
+    CRUD,
     Pagination,
     Sorting,
 } from '../../types/frontendTypes'
+import { InvoiceResponseDto } from '../../types/endpointTypes'
+import { uiActions } from './ui'
 
 const { createThunks, apiThunkFor } = createThunkFactory<ThunkState>()
 
 export interface InvoiceState {
     loading: boolean
-    invoices: ExampleInvoiceResponseDto[]
+    invoices: InvoiceResponseDto[]
     selectedInvoiceId: number
     selectedInvoiceOperation: CRUD | null
     sorting: Sorting
@@ -28,14 +29,67 @@ const initialState: InvoiceState = {
     selectedInvoiceOperation: null,
     sorting: {
         order: 'desc',
-        orderBy: InvoiceHeader.Date,
+        orderBy: InvoiceHeader.Amount,
     },
     pagination: { count: 10, limit: 10, offset: 0, total: 0 },
 }
 
-const thunks = createThunks(
+export const thunks = createThunks(
     {
-        getInvoices: apiThunkFor(cabinApi.getInvoices)(),
+        getInvoices: apiThunkFor(invoiceApi.getInvoices)(),
+        createInvoice: async (
+            invoice: InvoiceResponseDto,
+            { rejectWithValue, dispatch }
+        ) => {
+            const response = await invoiceApi.createInvoice(invoice)
+            if (response.ok) {
+                dispatch(
+                    uiActions.setNotification({
+                        message: 'Lasku luotu',
+                        severity: 'success',
+                    })
+                )
+                dispatch(invoiceActions.resetSelectedInvoiceId())
+                dispatch(thunks.getInvoices())
+                return response.data
+            } else return rejectWithValue('Laskun luominen epäonnistui.')
+        },
+        updateInvoice: async (
+            invoice: InvoiceResponseDto,
+            { rejectWithValue, dispatch }
+        ) => {
+            const response = await invoiceApi.updateInvoice(invoice.id, invoice)
+            if (response.ok) {
+                dispatch(
+                    uiActions.setNotification({
+                        message: response.data,
+                        severity: 'success',
+                    })
+                )
+                dispatch(invoiceActions.resetSelectedInvoiceId())
+                dispatch(thunks.getInvoices())
+                return response.data
+            } else return rejectWithValue('Laskun muokkaus epäonnistui.')
+        },
+        deleteInvoice: async (
+            _: void,
+            { rejectWithValue, dispatch, getState }
+        ) => {
+            const selected = getState().invoice.selectedInvoiceId
+            const response = await invoiceApi.deleteInvoice(selected)
+
+            if (response.ok) {
+                dispatch(
+                    uiActions.setNotification({
+                        message: response.data,
+                        severity: 'success',
+                    })
+                )
+                dispatch(invoiceActions.resetSelectedInvoiceId())
+                dispatch(thunks.getInvoices())
+                return response.data
+            } else return rejectWithValue('Laskun poisto epäonnistui.')
+        },
     },
     'invoice'
 )
@@ -71,14 +125,34 @@ const invoice = createSlice({
     },
     extraReducers: (builder) => {
         const util = sliceHelper(builder, thunks)
+
         util.mapThunksToState('fulfilled', {
             getInvoices: 'invoices',
         })
-        builder.addMatcher(isAnyOf(thunks.getInvoices.pending), (state) => {
-            state.loading = true
-        })
+
         builder.addMatcher(
-            isAnyOf(thunks.getInvoices.rejected, thunks.getInvoices.fulfilled),
+            isAnyOf(
+                thunks.getInvoices.pending,
+                thunks.createInvoice.pending,
+                thunks.updateInvoice.pending,
+                thunks.deleteInvoice.pending
+            ),
+            (state) => {
+                state.loading = true
+            }
+        )
+
+        builder.addMatcher(
+            isAnyOf(
+                thunks.getInvoices.rejected,
+                thunks.getInvoices.fulfilled,
+                thunks.createInvoice.rejected,
+                thunks.createInvoice.fulfilled,
+                thunks.updateInvoice.rejected,
+                thunks.updateInvoice.fulfilled,
+                thunks.deleteInvoice.rejected,
+                thunks.deleteInvoice.fulfilled
+            ),
             (state) => {
                 state.loading = false
             }

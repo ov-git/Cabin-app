@@ -1,64 +1,64 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit'
-import { cabinApi } from '../../api/api'
+import { userApi } from '../../api/api'
 import { type ThunkState } from '../store'
 import { createThunkFactory, sliceHelper } from '@kallinen/thunk-utility'
 import {
-    CabinHeader,
+    UserHeader,
     CRUD,
     Pagination,
     Sorting,
 } from '../../types/frontendTypes'
-import { CabinResponseDto } from '../../types/endpointTypes'
+import { UserResponseDto } from '../../types/endpointTypes'
 import { uiActions } from './ui'
 
 const { createThunks, apiThunkFor } = createThunkFactory<ThunkState>()
 
-export interface CabinState {
+export interface UserState {
     loading: boolean
-    cabins: CabinResponseDto[]
-    selectedCabinId: number
-    selectedCabinOperation: CRUD | null
+    users: UserResponseDto[]
+    selectedUserId: number
+    selectedUserOperation: CRUD | null
     sorting: Sorting
     pagination: Pagination
 }
 
-const initialState: CabinState = {
+const initialState: UserState = {
     loading: false,
-    cabins: [],
-    selectedCabinId: -1,
-    selectedCabinOperation: null,
+    users: [],
+    selectedUserId: -1,
+    selectedUserOperation: null,
     sorting: {
         order: 'desc',
-        orderBy: CabinHeader.Name,
+        orderBy: UserHeader.Username,
     },
     pagination: { count: 10, limit: 10, offset: 0, total: 0 },
 }
 
 export const thunks = createThunks(
     {
-        getCabins: apiThunkFor(cabinApi.getCabins)(),
-        createCabin: async (
-            cabin: CabinResponseDto,
+        getUsers: apiThunkFor(userApi.getUsers)(),
+        createUser: async (
+            user: UserResponseDto,
             { rejectWithValue, dispatch }
         ) => {
-            const response = await cabinApi.createCabin(cabin)
+            const response = await userApi.createUser(user)
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
-                        message: 'Käyttäjä luotu.',
+                        message: 'Käyttäjä luotu',
                         severity: 'success',
                     })
                 )
-                dispatch(cabinActions.resetSelectedCabinId())
-                dispatch(thunks.getCabins())
+                dispatch(userActions.resetSelectedUserId())
+                dispatch(thunks.getUsers())
                 return response.data
-            } else return rejectWithValue('Mökin luominen epäonnistui.')
+            } else return rejectWithValue('Käyttäjän luominen epäonnistui.')
         },
-        updateCabin: async (
-            cabin: CabinResponseDto,
+        updateUser: async (
+            user: UserResponseDto,
             { rejectWithValue, dispatch }
         ) => {
-            const response = await cabinApi.updateCabin(cabin.id, cabin)
+            const response = await userApi.updateUser(user.id, user)
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
@@ -66,36 +66,36 @@ export const thunks = createThunks(
                         severity: 'success',
                     })
                 )
-                dispatch(cabinActions.resetSelectedCabinId())
-                dispatch(thunks.getCabins())
+                dispatch(userActions.resetSelectedUserId())
+                dispatch(thunks.getUsers())
                 return response.data
-            } else return rejectWithValue('Mökin muokkaus epäonnistui.')
+            } else return rejectWithValue('Käyttäjän muokkaus epäonnistui.')
         },
-        deleteCabin: async (
+        deleteUser: async (
             _: void,
             { rejectWithValue, dispatch, getState }
         ) => {
-            const selected = getState().cabin.selectedCabinId
-            const response = await cabinApi.deleteCabin(selected)
+            const selected = getState().user.selectedUserId
+            const response = await userApi.deleteUser(selected)
+
             if (response.ok) {
-                console
                 dispatch(
                     uiActions.setNotification({
                         message: response.data,
                         severity: 'success',
                     })
                 )
-                dispatch(cabinActions.resetSelectedCabinId())
-                dispatch(thunks.getCabins())
+                dispatch(userActions.resetSelectedUserId())
+                dispatch(thunks.getUsers())
                 return response.data
-            } else return rejectWithValue('Mökin poisto epäonnistui.')
+            } else return rejectWithValue('Käyttäjän poisto epäonnistui.')
         },
     },
-    'cabin'
+    'user'
 )
 
-const cabin = createSlice({
-    name: 'cabin',
+const user = createSlice({
+    name: 'user',
     initialState,
     reducers: {
         setSorting: (state, action: PayloadAction<Sorting>) => {
@@ -107,34 +107,34 @@ const cabin = createSlice({
         setPagination: (state, action: PayloadAction<Pagination>) => {
             state.pagination = action.payload
         },
-        setSelectedCabinId: (
+        setSelectedUserId: (
             state,
             action: PayloadAction<{ id: number; operation: CRUD }>
         ) => {
-            state.selectedCabinId = action.payload.id
-            state.selectedCabinOperation = action.payload.operation
+            state.selectedUserId = action.payload.id
+            state.selectedUserOperation = action.payload.operation
         },
-        resetSelectedCabinId: (state) => {
-            state.selectedCabinId = initialState.selectedCabinId
-            state.selectedCabinOperation = initialState.selectedCabinOperation
+        resetSelectedUserId: (state) => {
+            state.selectedUserId = initialState.selectedUserId
+            state.selectedUserOperation = initialState.selectedUserOperation
         },
         setOperation: (state, action: PayloadAction<CRUD>) => {
-            state.selectedCabinOperation = action.payload
+            state.selectedUserOperation = action.payload
         },
     },
     extraReducers: (builder) => {
         const util = sliceHelper(builder, thunks)
 
         util.mapThunksToState('fulfilled', {
-            getCabins: 'cabins',
+            getUsers: 'users',
         })
 
         builder.addMatcher(
             isAnyOf(
-                thunks.getCabins.pending,
-                thunks.createCabin.pending,
-                thunks.updateCabin.pending,
-                thunks.deleteCabin.pending
+                thunks.getUsers.pending,
+                thunks.createUser.pending,
+                thunks.updateUser.pending,
+                thunks.deleteUser.pending
             ),
             (state) => {
                 state.loading = true
@@ -143,14 +143,14 @@ const cabin = createSlice({
 
         builder.addMatcher(
             isAnyOf(
-                thunks.getCabins.rejected,
-                thunks.getCabins.fulfilled,
-                thunks.createCabin.rejected,
-                thunks.createCabin.fulfilled,
-                thunks.updateCabin.rejected,
-                thunks.updateCabin.fulfilled,
-                thunks.deleteCabin.rejected,
-                thunks.deleteCabin.fulfilled
+                thunks.getUsers.rejected,
+                thunks.getUsers.fulfilled,
+                thunks.createUser.rejected,
+                thunks.createUser.fulfilled,
+                thunks.updateUser.rejected,
+                thunks.updateUser.fulfilled,
+                thunks.deleteUser.rejected,
+                thunks.deleteUser.fulfilled
             ),
             (state) => {
                 state.loading = false
@@ -159,6 +159,6 @@ const cabin = createSlice({
     },
 })
 
-export default cabin
-export const cabinThunks = thunks
-export const cabinActions = cabin.actions
+export default user
+export const userThunks = thunks
+export const userActions = user.actions

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "customerId": 1,
+    "reservationId": 1,
+    "amount": 250.0,
+    "status": "PAID",
+    "issueDate": "2026-04-01",
+    "dueDate": "2026-04-10"
+  },
+  {
+    "id": 2,
+    "customerId": 2,
+    "reservationId": 2,
+    "amount": 180.0,
+    "status": "PENDING",
+    "issueDate": "2026-04-05",
+    "dueDate": "2026-04-15"
+  }
+]

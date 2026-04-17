@@ -4,10 +4,11 @@ import { Box, Button, IconButton, Typography } from '@mui/material'
 import { ScreenWrapper } from './common/ScreenWrapper'
 import {
     AppRoutes,
-    ReservationHeader,
     Pagination as PaginationType,
     CRUD,
     getReservationLabel,
+    reservationSortableHeaders,
+    getCellText,
 } from '../types/frontendTypes'
 import {
     reservationActions,
@@ -18,11 +19,12 @@ import { SortableColumnHeader } from './common/SortableColumnHeader'
 import { Pagination } from './common/Pagination'
 import { Add, Cancel, Delete, Edit } from '@mui/icons-material'
 import { CustomModal } from './common/CustomModal'
-import { Form } from 'react-final-form'
-import AddBoxIcon from '@mui/icons-material/AddBox'
-import { TextField } from 'mui-rff'
+import {
+    ReservationForm,
+    reservationFormFields,
+} from '../forms/ReservationForm'
 
-const gridTemplateColumns = '1fr 1fr 1fr 40px 40px'
+const gridTemplateColumns = '1fr 1fr 1fr 1fr 1fr 40px 40px'
 
 export const Reservation: React.FC = () => {
     const dispatch = useAppDispatch()
@@ -102,24 +104,15 @@ const List: React.FC = () => {
                 display={'grid'}
                 gridTemplateColumns={gridTemplateColumns}
             >
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={reservationActions.setSorting}
-                    columnIdentifier={ReservationHeader.ReservationNumber}
-                    label="Varausnumero"
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={reservationActions.setSorting}
-                    columnIdentifier={ReservationHeader.StartDate}
-                    label="Alkupvm."
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={reservationActions.setSorting}
-                    columnIdentifier={ReservationHeader.EndDate}
-                    label="Loppupvm."
-                />
+                {reservationSortableHeaders.map((header) => (
+                    <SortableColumnHeader
+                        key={header}
+                        sorting={sorting}
+                        setSorting={reservationActions.setSorting}
+                        columnIdentifier={header}
+                        label={getReservationLabel(header)}
+                    />
+                ))}
                 <Box />
                 <Box />
             </Box>
@@ -134,9 +127,15 @@ const List: React.FC = () => {
                     alignItems={'center'}
                     p={1}
                 >
-                    <Cell text={reservation.reservationNumber} />
-                    <Cell text={reservation.startDate} />
-                    <Cell text={reservation.endDate} />
+                    {reservationSortableHeaders.map((header) => (
+                        <Cell
+                            key={header}
+                            text={getCellText(
+                                reservation[header],
+                                reservationFormFields[header]?.type
+                            )}
+                        />
+                    ))}
                     <IconButton
                         onClick={handleSelect(reservation.id, 'update')}
                         size="small"
@@ -161,103 +160,6 @@ const List: React.FC = () => {
 
 const Cell: React.FC<{ text: string }> = ({ text }) => {
     return <Typography fontSize={12}>{text}</Typography>
-}
-
-const ReservationForm: React.FC = () => {
-    const selectedReservationId = useAppSelector(
-        (state) => state.reservation.selectedReservationId
-    )
-
-    const reservations = useAppSelector(
-        (state) => state.reservation.reservations
-    )
-    const dispatch = useAppDispatch()
-    const handleCancel = () => {
-        dispatch(reservationActions.resetSelectedReservationId())
-    }
-    return (
-        <Form
-            onSubmit={() => console.log}
-            initialValues={reservations.find(
-                (c) => c.id === selectedReservationId
-            )}
-            render={({ handleSubmit, form }) => {
-                return (
-                    <form
-                        style={{ flex: 1, display: 'flex' }}
-                        onSubmit={handleSubmit}
-                    >
-                        <Box
-                            flex={1}
-                            display={'flex'}
-                            flexDirection={'column'}
-                            justifyContent={'space-between'}
-                            gap={2}
-                        >
-                            {Object.values(ReservationHeader).map((h) => (
-                                <TextField
-                                    key={h}
-                                    label={getReservationLabel(h)}
-                                    name={h}
-                                    id={h}
-                                    size="small"
-                                    type="text"
-                                />
-                            ))}
-                            <Box alignSelf={'end'}>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    color="error"
-                                    onClick={handleCancel}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <Cancel
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Peruuta</Typography>
-                                </Button>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <AddBoxIcon
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Tallenna</Typography>
-                                </Button>
-                            </Box>
-                        </Box>
-                    </form>
-                )
-            }}
-        />
-    )
 }
 
 const ReservationDeletion: React.FC = () => {
@@ -285,8 +187,7 @@ const ReservationDeletion: React.FC = () => {
             justifyContent={'space-between'}
         >
             <Typography>
-                Haluatko varmasti poistaa varauksen "
-                {reservation.reservationNumber}?"
+                Haluatko varmasti poistaa varauksen "{reservation.id}?"
             </Typography>
             <Box display={'flex'} gap={1}>
                 <Button

@@ -5,8 +5,9 @@ import { ScreenWrapper } from './common/ScreenWrapper'
 import {
     AppRoutes,
     CRUD,
+    getCellText,
     getInvoiceLabel,
-    InvoiceHeader,
+    invoiceSortableHeaders,
     Pagination as PaginationType,
 } from '../types/frontendTypes'
 import { invoiceActions, invoiceThunks } from '../redux/slices/invoice'
@@ -14,12 +15,10 @@ import { SortableColumnHeader } from './common/SortableColumnHeader'
 import { color } from '../utils/color'
 import { Pagination } from './common/Pagination'
 import { CustomModal } from './common/CustomModal'
-import { TextField } from 'mui-rff'
-import { Form } from 'react-final-form'
-import AddBoxIcon from '@mui/icons-material/AddBox'
 import { Add, Cancel, Delete, Edit } from '@mui/icons-material'
+import { InvoiceForm, invoiceFormFields } from '../forms/InvoiceForm'
 
-const gridTemplateColumns = '1fr 1fr 1fr 40px 40px'
+const gridTemplateColumns = '1fr 1fr 1fr 1fr 1fr 1fr 40px 40px'
 
 export const Invoice: React.FC = () => {
     const dispatch = useAppDispatch()
@@ -99,24 +98,15 @@ const List: React.FC = () => {
                 display={'grid'}
                 gridTemplateColumns={gridTemplateColumns}
             >
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={invoiceActions.setSorting}
-                    columnIdentifier={InvoiceHeader.Identifier}
-                    label="Laskun tunniste"
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={invoiceActions.setSorting}
-                    columnIdentifier={InvoiceHeader.Date}
-                    label="Päivämäärä"
-                />
-                <SortableColumnHeader
-                    sorting={sorting}
-                    setSorting={invoiceActions.setSorting}
-                    columnIdentifier={InvoiceHeader.TotalAmount}
-                    label="Loppusumma"
-                />
+                {invoiceSortableHeaders.map((header) => (
+                    <SortableColumnHeader
+                        key={header}
+                        sorting={sorting}
+                        setSorting={invoiceActions.setSorting}
+                        columnIdentifier={header}
+                        label={getInvoiceLabel(header)}
+                    />
+                ))}
                 <Box />
                 <Box />
             </Box>
@@ -131,9 +121,15 @@ const List: React.FC = () => {
                     alignItems={'center'}
                     p={1}
                 >
-                    <Cell text={invoice.identifier} />
-                    <Cell text={invoice.date} />
-                    <Cell text={invoice.totalAmount} />
+                    {invoiceSortableHeaders.map((header) => (
+                        <Cell
+                            key={header}
+                            text={getCellText(
+                                invoice[header],
+                                invoiceFormFields[header]?.type
+                            )}
+                        />
+                    ))}
                     <IconButton
                         onClick={handleSelect(invoice.id, 'update')}
                         size="small"
@@ -160,99 +156,6 @@ const Cell: React.FC<{ text: string }> = ({ text }) => {
     return <Typography fontSize={12}>{text}</Typography>
 }
 
-const InvoiceForm = () => {
-    const selectedInvoiceId = useAppSelector(
-        (state) => state.invoice.selectedInvoiceId
-    )
-    const invoices = useAppSelector((state) => state.invoice.invoices)
-    const dispatch = useAppDispatch()
-    const handleCancel = () => {
-        dispatch(invoiceActions.resetSelectedInvoiceId())
-    }
-
-    return (
-        <Form
-            onSubmit={() => console.log}
-            initialValues={invoices.find((c) => c.id === selectedInvoiceId)}
-            render={({ handleSubmit, form }) => {
-                return (
-                    <form
-                        style={{ flex: 1, display: 'flex' }}
-                        onSubmit={handleSubmit}
-                    >
-                        <Box
-                            flex={1}
-                            display={'flex'}
-                            flexDirection={'column'}
-                            justifyContent={'space-between'}
-                            gap={2}
-                        >
-                            {Object.values(InvoiceHeader).map((h) => (
-                                <TextField
-                                    key={h}
-                                    label={getInvoiceLabel(h)}
-                                    name={h}
-                                    id={h}
-                                    size="small"
-                                    type="text"
-                                />
-                            ))}
-                            <Box alignSelf={'end'}>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    color="error"
-                                    onClick={handleCancel}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <Cancel
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Peruuta</Typography>
-                                </Button>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <AddBoxIcon
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Tallenna</Typography>
-                                </Button>
-                            </Box>
-                        </Box>
-                    </form>
-                )
-            }}
-        />
-    )
-}
-
 const InvoiceDeletion: React.FC = () => {
     const invoices = useAppSelector((state) => state.invoice.invoices)
     const dispatch = useAppDispatch()
@@ -276,8 +179,8 @@ const InvoiceDeletion: React.FC = () => {
             justifyContent={'space-between'}
         >
             <Typography>
-                Haluatko varmasti poistaa laskun "{invoice.identifier} (
-                {invoice.totalAmount}€)?"
+                Haluatko varmasti poistaa laskun "{invoice.id} ({invoice.amount}
+                €)?"
             </Typography>
             <Box display={'flex'} gap={1}>
                 <Button

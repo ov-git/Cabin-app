@@ -1,38 +1,47 @@
-//tänne endpointien haluamat (request) ja palauttamat (response) datatyypit, jotka vastaavat spring-rajapintaa.
-export interface ExampleResponseDto {
-    id: number
-    label: string
-}
-
-export interface ExampleRequestDto {
-    date: string
-    pagination: { offset: number; limit: number; count: number; total: number }
-}
-
-export interface ExampleCabinResponseDto {
+export interface CabinResponseDto {
     id: number
     name: string
-    size: string
-    pricePerDay: string
+    location: string
+    pricePerNight: number
+    maxGuests: number
+    bedrooms: number
+    bathrooms: number
+    amenities: string[]
+    available: boolean
+    rating: number
 }
 
-export interface ExampleCustomerResponseDto {
+export interface CustomerResponseDto {
     id: number
-    name: string
-    phone: string
+    firstName: string
+    lastName: string
     email: string
+    phone: string
 }
 
-export interface ExampleInvoiceResponseDto {
+export interface InvoiceResponseDto {
     id: number
-    identifier: string
-    date: string
-    totalAmount: string
+    customerId: number
+    reservationId: number
+    amount: number
+    status: 'PAID' | 'PENDING' | 'CANCELLED'
+    issueDate: string
+    dueDate: string
 }
 
-export interface ExampleReservationResponseDto {
+export interface ReservationResponseDto {
     id: number
+    customerId: number
+    cabinId: number
     startDate: string
     endDate: string
-    reservationNumber: string
+    status: 'CONFIRMED' | 'PENDING' | 'CANCELLED'
+}
+
+export interface UserResponseDto {
+    id: number
+    username: string
+    email: string
+    role: 'ADMIN' | 'USER'
+    active: boolean
 }
