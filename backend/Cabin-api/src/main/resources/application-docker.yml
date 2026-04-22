@@ -15,5 +15,5 @@ spring:
   #     mode: never  # init sql is handled in docker-compose
   jpa:
     hibernate:
-      show-sql: true
-      ddl-auto: update
+      show-sql: true 
+      ddl-auto: update #Hibernate creates tables manually

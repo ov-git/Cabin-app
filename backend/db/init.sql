@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS cabin (
 );
 
 INSERT INTO cabin (name, price) VALUES
-    ('Lake Cabin', 120),
-    ('Forest Cabin', 90);
+('Lake Cabin', 120),
+('Forest Cabin', 90);
