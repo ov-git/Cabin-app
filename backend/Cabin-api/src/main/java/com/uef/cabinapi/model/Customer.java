@@ -17,6 +17,8 @@ public class Customer {
     private String email;
     private String phoneNumber;
 
+    protected Customer() {}//Hibernate needs this
+
     public Customer(String firstName, String lastName, String email, String phoneNumber) {
         this.firstName = firstName;
         this.lastName = lastName;

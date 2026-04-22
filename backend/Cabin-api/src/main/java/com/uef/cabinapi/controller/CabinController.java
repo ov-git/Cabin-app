@@ -33,15 +33,11 @@ public class CabinController {
    }
     
     @GetMapping
-    public String findAll() throws IOException {
+    public List<Cabin> findAll() throws IOException {
         // return list of all cabins
-        // InputStream input = new ClassPathResource("data/CabinsMock.json").getInputStream();
-        // String json = new String(input.readAllBytes());
-
         List<Cabin> cabins = service.getAllCabins();
-        String json = cabins.toString();
 
-        return json;
+        return cabins;
     }
 
     @GetMapping("/{id}")
@@ -57,10 +53,10 @@ public class CabinController {
     @ResponseStatus(HttpStatus.CREATED)
     public String postCabin(@RequestBody String entity) {
 
-        // Parse cabin here
+        // Replace by json parsed cabin
         BigDecimal d = new BigDecimal("100.50");
         Cabin cabin = new Cabin("Test Cabin", d);
-
+        //
 
         service.createCabin(cabin);
 

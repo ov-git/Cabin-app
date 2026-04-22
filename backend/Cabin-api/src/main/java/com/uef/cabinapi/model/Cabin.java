@@ -17,6 +17,8 @@ public class Cabin {
     private String name;
     private BigDecimal price;
 
+    protected Cabin() {}//Hibernate needs this
+
     public Cabin(String name, BigDecimal price) {
         this.name = name;
         this.price = price;

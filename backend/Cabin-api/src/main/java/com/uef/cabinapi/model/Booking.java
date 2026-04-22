@@ -25,6 +25,14 @@ public class Booking {
     private LocalDate startDate;
     private LocalDate endDate;
 
+    public Booking() {}
+    public Booking(Customer customer, Cabin cabin, LocalDate startDate, LocalDate endDate) {
+        this.customer = customer;
+        this.cabin = cabin;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     public Long getId() {
         return id;
     }
