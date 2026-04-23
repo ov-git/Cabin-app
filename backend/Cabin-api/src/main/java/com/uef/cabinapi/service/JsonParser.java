@@ -1,6 +1,7 @@
 /*
 Jäsennä JSON-tiedostoja.
 Sisältää mm. metodit parseUser, parseCabin jne., jotka muuttavat json-datan vastaavaksi luokaksi.
+TODO: lisää Jackson pom.xml-tiedostoon (https://www.javaspring.net/blog/jackson-java/)
  */
 
 package com.uef.cabinapi.service;
