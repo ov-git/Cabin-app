@@ -7,6 +7,7 @@ import {
     CRUD,
     getCellText,
     getInvoiceLabel,
+    InvoiceHeader,
     invoiceSortableHeaders,
     Pagination as PaginationType,
 } from '../types/frontendTypes'
@@ -15,8 +16,9 @@ import { SortableColumnHeader } from './common/SortableColumnHeader'
 import { color } from '../utils/color'
 import { Pagination } from './common/Pagination'
 import { CustomModal } from './common/CustomModal'
-import { Add, Cancel, Delete, Edit } from '@mui/icons-material'
+import { Cancel, Delete, Edit } from '@mui/icons-material'
 import { InvoiceForm, invoiceFormFields } from '../forms/InvoiceForm'
+import { InvoiceResponseDto } from '../types/endpointTypes'
 
 const gridTemplateColumns = '1fr 1fr 1fr 1fr 1fr 1fr 40px 40px'
 
@@ -44,13 +46,10 @@ export const Invoice: React.FC = () => {
         dispatch(invoiceActions.setPagination(pagination))
     }
 
-    const handleCreate = () => {
-        dispatch(invoiceActions.setOperation('create'))
-    }
-
     return (
         <ScreenWrapper loading={loading} headerKey={AppRoutes.Invoice}>
             <CustomModal
+                entity="invoice"
                 operation={selectedInvoiceOperation}
                 open={
                     selectedInvoiceId >= 0 ||
@@ -64,15 +63,6 @@ export const Invoice: React.FC = () => {
                     <InvoiceForm />
                 )}
             </CustomModal>
-            <Button
-                onClick={handleCreate}
-                sx={{ marginBottom: 1 }}
-                variant="outlined"
-                color="primary"
-                startIcon={<Add />}
-            >
-                Luo uusi lasku
-            </Button>
             <List />
             <Pagination
                 loading={loading}
@@ -124,10 +114,7 @@ const List: React.FC = () => {
                     {invoiceSortableHeaders.map((header) => (
                         <Cell
                             key={header}
-                            text={getCellText(
-                                invoice[header],
-                                invoiceFormFields[header]?.type
-                            )}
+                            text={getInvoiceCellText(invoice, header)}
                         />
                     ))}
                     <IconButton
@@ -140,6 +127,7 @@ const List: React.FC = () => {
                     </IconButton>
                     <IconButton
                         onClick={handleSelect(invoice.id, 'delete')}
+                        disabled={!invoice.deletable}
                         size="small"
                         color="error"
                         sx={{ height: 15 }}
@@ -170,13 +158,16 @@ const InvoiceDeletion: React.FC = () => {
 
     const handleClickCancel = () =>
         dispatch(invoiceActions.resetSelectedInvoiceId())
+
+    const handleDelete = () => dispatch(invoiceThunks.deleteInvoice())
+
     return (
         <Box
             display={'flex'}
             flexDirection={'column'}
             alignItems={'center'}
-            height={'100%'}
             justifyContent={'space-between'}
+            flex={1}
         >
             <Typography>
                 Haluatko varmasti poistaa laskun "{invoice.id} ({invoice.amount}
@@ -193,6 +184,7 @@ const InvoiceDeletion: React.FC = () => {
                 </Button>
                 <Button
                     variant="outlined"
+                    onClick={handleDelete}
                     color="secondary"
                     startIcon={<Delete />}
                 >
@@ -201,4 +193,19 @@ const InvoiceDeletion: React.FC = () => {
             </Box>
         </Box>
     )
+}
+
+const getInvoiceCellText = (
+    invoice: InvoiceResponseDto,
+    header: InvoiceHeader
+) => {
+    if (header === InvoiceHeader.CustomerId) {
+        return `${invoice.customer.firstName} ${invoice.customer.lastName}`
+    }
+
+    if (header === InvoiceHeader.ReservationId) {
+        return String(invoice.reservation.id)
+    }
+
+    return getCellText(invoice[header], invoiceFormFields[header]?.type)
 }

@@ -3,13 +3,14 @@ import {
     getCustomerLabel,
     FormFieldConfig,
 } from '../types/frontendTypes'
-import { customerActions } from '../redux/slices/customer'
+import { customerActions, customerThunks } from '../redux/slices/customer'
 import { Cancel } from '@mui/icons-material'
 import { Form } from 'react-final-form'
 import AddBoxIcon from '@mui/icons-material/AddBox'
 import { useAppDispatch, useAppSelector } from '../redux/store'
 import { Box, Button, Typography } from '@mui/material'
 import { DynamicFormField } from '../screens/common/DynamicFormField'
+import { CustomerRequestDto } from '../types/endpointTypes'
 
 export const customerFormHeaders = [
     CustomerHeader.FirstName,
@@ -25,11 +26,37 @@ export const customerFormFields: Record<CustomerHeader, FormFieldConfig> = {
     [CustomerHeader.Phone]: { type: 'text' },
 }
 
+const validateCustomer = (values: Partial<CustomerRequestDto>) => {
+    const errors: Partial<Record<keyof CustomerRequestDto, string>> = {}
+
+    if (!values.firstName?.trim()) {
+        errors.firstName = 'Etunimi on pakollinen'
+    }
+
+    if (!values.lastName?.trim()) {
+        errors.lastName = 'Sukunimi on pakollinen'
+    }
+
+    if (!values.email?.trim()) {
+        errors.email = 'Sähköposti on pakollinen'
+    } else if (!values.email.includes('@')) {
+        errors.email = 'Sähköposti ei ole kelvollinen'
+    }
+
+    if (!values.phone?.trim()) {
+        errors.phone = 'Puhelin on pakollinen'
+    }
+
+    return errors
+}
+
 export const CustomerForm: React.FC = () => {
     const selectedCustomerId = useAppSelector(
         (state) => state.customer.selectedCustomerId
     )
-
+    const operation = useAppSelector(
+        (state) => state.customer.selectedCustomerOperation
+    )
     const customers = useAppSelector((state) => state.customer.customers)
 
     const dispatch = useAppDispatch()
@@ -38,85 +65,82 @@ export const CustomerForm: React.FC = () => {
         dispatch(customerActions.resetSelectedCustomerId())
     }
 
+    const handleSubmit = (data: CustomerRequestDto) => {
+        if (operation === 'create') {
+            dispatch(customerThunks.createCustomer(data))
+        } else if (operation === 'update') {
+            dispatch(
+                customerThunks.updateCustomer({
+                    id: selectedCustomerId,
+                    ...data,
+                })
+            )
+        }
+    }
+
     return (
         <Form
-            onSubmit={() => console.log}
+            onSubmit={handleSubmit}
+            validate={validateCustomer}
             initialValues={customers.find((c) => c.id === selectedCustomerId)}
-            render={({ handleSubmit, form }) => {
-                return (
-                    <form
-                        style={{ flex: 1, display: 'flex' }}
-                        onSubmit={handleSubmit}
+            render={({ handleSubmit, form }) => (
+                <form
+                    style={{ flex: 1, display: 'flex' }}
+                    onSubmit={handleSubmit}
+                >
+                    <Box
+                        flex={1}
+                        display="flex"
+                        flexDirection="column"
+                        justifyContent="space-between"
+                        gap={2}
                     >
-                        <Box
-                            flex={1}
-                            display={'flex'}
-                            flexDirection={'column'}
-                            justifyContent={'space-between'}
-                            gap={2}
-                        >
-                            {customerFormHeaders.map((header) => (
-                                <DynamicFormField
-                                    key={header}
-                                    name={header}
-                                    label={getCustomerLabel(header)}
-                                    config={customerFormFields[header]}
-                                />
-                            ))}
+                        {customerFormHeaders.map((header) => (
+                            <DynamicFormField
+                                key={header}
+                                name={header}
+                                label={getCustomerLabel(header)}
+                                config={customerFormFields[header]}
+                            />
+                        ))}
 
-                            <Box alignSelf={'end'}>
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    color="error"
-                                    onClick={handleCancel}
-                                    disabled={form.getState().invalid}
-                                    type="button"
-                                    startIcon={
-                                        <Cancel
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Peruuta</Typography>
-                                </Button>
+                        <Box alignSelf="end">
+                            <Button
+                                color="error"
+                                onClick={handleCancel}
+                                type="button"
+                                startIcon={
+                                    <Cancel
+                                        sx={{
+                                            height: 15,
+                                            marginBottom: '3px',
+                                            marginRight: '2px',
+                                        }}
+                                    />
+                                }
+                            >
+                                <Typography>Peruuta</Typography>
+                            </Button>
 
-                                <Button
-                                    sx={{
-                                        gridColumn: 'span 2',
-                                        minHeight: 'unset',
-                                        height: 50,
-                                        minWidth: 120,
-                                        alignSelf: 'end',
-                                    }}
-                                    disabled={form.getState().invalid}
-                                    type="submit"
-                                    startIcon={
-                                        <AddBoxIcon
-                                            sx={{
-                                                height: 15,
-                                                marginBottom: '3px',
-                                                marginRight: '2px',
-                                            }}
-                                        />
-                                    }
-                                >
-                                    <Typography>Tallenna</Typography>
-                                </Button>
-                            </Box>
+                            <Button
+                                type="submit"
+                                disabled={form.getState().invalid}
+                                startIcon={
+                                    <AddBoxIcon
+                                        sx={{
+                                            height: 15,
+                                            marginBottom: '3px',
+                                            marginRight: '2px',
+                                        }}
+                                    />
+                                }
+                            >
+                                <Typography>Tallenna</Typography>
+                            </Button>
                         </Box>
-                    </form>
-                )
-            }}
+                    </Box>
+                </form>
+            )}
         />
     )
 }

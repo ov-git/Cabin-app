@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "firstName": "Matti",
+    "lastName": "Virtanen",
+    "email": "matti.virtanen@virtasmasa.fi",
+    "phone": "+3584404040040"
+  },
+  {
+    "id": 2,
+    "firstName": "Maija",
+    "lastName": "Virtanen",
+    "email": "maija.virtanen@virtasmasa.fi",
+    "phone": "+3584404040041"
+  }
+]

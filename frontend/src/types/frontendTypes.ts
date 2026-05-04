@@ -1,5 +1,4 @@
 export enum AppRoutes {
-    Root = '/',
     Cabin = '/cabin',
     Customer = '/customer',
     Invoice = '/invoice',
@@ -25,37 +24,22 @@ export interface Pagination {
 export enum CabinHeader {
     Name = 'name',
     Location = 'location',
-    PricePerNight = 'pricePerNight',
+    Price = 'price',
     MaxGuests = 'maxGuests',
-    Bedrooms = 'bedrooms',
-    Bathrooms = 'bathrooms',
-    Amenities = 'amenities',
-    Available = 'available',
-    Rating = 'rating',
 }
 
 export const cabinSortableHeaders = [
     CabinHeader.Name,
     CabinHeader.Location,
-    CabinHeader.PricePerNight,
+    CabinHeader.Price,
     CabinHeader.MaxGuests,
-    CabinHeader.Bedrooms,
-    CabinHeader.Bathrooms,
-    CabinHeader.Amenities,
-    CabinHeader.Available,
-    CabinHeader.Rating,
 ] as const
 
 export const cabinLabels: Record<CabinHeader, string> = {
     [CabinHeader.Name]: 'Nimi',
     [CabinHeader.Location]: 'Sijainti',
-    [CabinHeader.PricePerNight]: 'Hinta / yö',
+    [CabinHeader.Price]: 'Hinta / yö',
     [CabinHeader.MaxGuests]: 'Max hlö',
-    [CabinHeader.Bedrooms]: 'MH',
-    [CabinHeader.Bathrooms]: 'KH',
-    [CabinHeader.Amenities]: 'Mukavuudet',
-    [CabinHeader.Available]: 'Saatavuus',
-    [CabinHeader.Rating]: 'Arvostelu',
 }
 
 export const getCabinLabel = (header: CabinHeader) => cabinLabels[header]
@@ -104,7 +88,7 @@ export const invoiceSortableHeaders = [
 
 export const invoiceLabels: Record<InvoiceHeader, string> = {
     [InvoiceHeader.CustomerId]: 'Asiakas',
-    [InvoiceHeader.ReservationId]: 'Varaus',
+    [InvoiceHeader.ReservationId]: 'Varausnumero',
     [InvoiceHeader.Amount]: 'Summa',
     [InvoiceHeader.Status]: 'Tila',
     [InvoiceHeader.IssueDate]: 'Päiväys',
@@ -172,7 +156,7 @@ export type FormFieldType = 'text' | 'number' | 'date' | 'boolean' | 'select'
 
 export interface SelectOption {
     label: string
-    value: string
+    value: string | number
 }
 
 export interface FormFieldConfig {
@@ -198,4 +182,18 @@ export const getCellText = (value: unknown, type?: FormFieldType): string => {
     }
 
     return String(value)
+}
+
+export const mapReservationOrderBy = (orderBy: string) => {
+    if (orderBy === ReservationHeader.CustomerId) return 'customer.id'
+    if (orderBy === ReservationHeader.CabinId) return 'cabin.id'
+
+    return orderBy
+}
+
+export const mapInvoiceOrderBy = (orderBy: string) => {
+    if (orderBy === InvoiceHeader.CustomerId) return 'customer.id'
+    if (orderBy === InvoiceHeader.ReservationId) return 'reservation.id'
+
+    return orderBy
 }

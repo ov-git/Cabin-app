@@ -4,11 +4,13 @@ import { CRUD } from '../../types/frontendTypes'
 
 interface Props extends ModalProps {
     operation: CRUD | null
+    entity: 'cabin' | 'invoice' | 'reservation' | 'customer'
 }
 
 export const CustomModal: React.FC<Props> = ({
     children,
     operation,
+    entity,
     ...rest
 }) => {
     return (
@@ -37,7 +39,9 @@ export const CustomModal: React.FC<Props> = ({
                 >
                     {operation !== 'delete' && (
                         <Typography mb={3} variant="h4">
-                            {operation === 'update' ? 'Muokkaa' : 'Lisää uusi'}
+                            {operation === 'update'
+                                ? 'Muokkaa'
+                                : `Lisää uusi ${getLabel(entity)}`}
                         </Typography>
                     )}
                     {children}
@@ -45,4 +49,17 @@ export const CustomModal: React.FC<Props> = ({
             }
         />
     )
+}
+
+const getLabel = (entity: 'cabin' | 'invoice' | 'reservation' | 'customer') => {
+    switch (entity) {
+        case 'cabin':
+            return 'mökki'
+        case 'invoice':
+            return 'lasku'
+        case 'reservation':
+            return 'varaus'
+        case 'customer':
+            return 'asiakas'
+    }
 }

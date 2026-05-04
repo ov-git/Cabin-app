@@ -44,7 +44,6 @@ function App() {
                     <BrowserRouter>
                         <TopBar />
                         <Routes>
-                            <Route path={AppRoutes.Root} element={<Home />} />
                             <Route path={AppRoutes.Cabin} element={<Cabin />} />
                             <Route
                                 path={AppRoutes.Reservation}
@@ -60,7 +59,7 @@ function App() {
                             />
                             <Route
                                 path={AppRoutes.Rest}
-                                element={<Navigate to={AppRoutes.Root} />}
+                                element={<Navigate to={AppRoutes.Cabin} />}
                             />
                         </Routes>
                     </BrowserRouter>

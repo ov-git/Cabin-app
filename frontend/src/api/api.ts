@@ -1,16 +1,30 @@
 import { ApiResponse, createApi } from '@kallinen/openapi-axios-client'
 import {
+    CabinRequestDto,
     CabinResponseDto,
+    CustomerRequestDto,
     CustomerResponseDto,
+    InvoiceRequestDto,
     InvoiceResponseDto,
+    PaginatedCabinResponseDto,
+    PaginatedCustomerResponseDto,
+    PaginatedInvoiceResponseDto,
+    PaginatedReservationResponseDto,
+    ReservationRequestDto,
     ReservationResponseDto,
-    UserResponseDto,
 } from '../types/endpointTypes'
 import { store } from '../redux/store'
 import { uiActions } from '../redux/slices/ui'
+import {
+    mapInvoiceOrderBy,
+    mapReservationOrderBy,
+    Pagination,
+    SelectOption,
+    Sorting,
+} from '../types/frontendTypes'
 
 const api = createApi({
-    url: 'http://localhost:8080/api',
+    url: import.meta.env.VITE_BACKEND_URL,
 })
 
 api.interceptors.response.use((response) => {
@@ -28,44 +42,100 @@ api.interceptors.response.use((response) => {
     return response
 })
 
-const getCabins = async (): Promise<ApiResponse<CabinResponseDto[], any>> => {
-    return await api.get<CabinResponseDto[]>('/cabin')
+const getCabins = async (
+    sorting: Sorting,
+    pagination: Pagination
+): Promise<ApiResponse<PaginatedCabinResponseDto, any>> => {
+    return await api.get<PaginatedCabinResponseDto>('/cabin', {
+        params: { ...sorting, ...pagination },
+    })
+}
+
+const getCustomers = async (
+    sorting: Sorting,
+    pagination: Pagination
+): Promise<ApiResponse<PaginatedCustomerResponseDto, any>> => {
+    return await api.get<PaginatedCustomerResponseDto>('/customer', {
+        params: { ...sorting, ...pagination },
+    })
+}
+
+const getInvoices = async (
+    sorting: Sorting,
+    pagination: Pagination
+): Promise<ApiResponse<PaginatedInvoiceResponseDto, any>> => {
+    return await api.get<PaginatedInvoiceResponseDto>('/invoice', {
+        params: {
+            ...sorting,
+            orderBy: mapInvoiceOrderBy(sorting.orderBy),
+            ...pagination,
+        },
+    })
+}
+
+const createInvoice = async (
+    payload: InvoiceRequestDto
+): Promise<ApiResponse<InvoiceResponseDto, any>> => {
+    return await api.post<InvoiceResponseDto>('/invoice', payload)
+}
+
+const updateInvoice = async (
+    payload: InvoiceRequestDto & { id: number }
+): Promise<ApiResponse<string, any>> => {
+    return await api.put<string>(`/invoice/${payload.id}`, payload)
+}
+
+const getReservations = async (
+    sorting: Sorting,
+    pagination: Pagination
+): Promise<ApiResponse<PaginatedReservationResponseDto, any>> => {
+    return await api.get<PaginatedReservationResponseDto>('/reservation', {
+        params: {
+            ...sorting,
+            orderBy: mapReservationOrderBy(sorting.orderBy),
+            ...pagination,
+        },
+    })
+}
+
+const createReservation = async (
+    payload: ReservationRequestDto
+): Promise<ApiResponse<ReservationResponseDto, any>> => {
+    return await api.post<ReservationResponseDto>('/reservation', payload)
+}
+
+const updateReservation = async (
+    payload: ReservationRequestDto & { id: number }
+): Promise<ApiResponse<string, any>> => {
+    return await api.put<string>(`/reservation/${payload.id}`, payload)
 }
 
 const createCabin = async (
-    payload: CabinResponseDto
+    payload: CabinRequestDto
 ): Promise<ApiResponse<CabinResponseDto, any>> => {
     return await api.post<CabinResponseDto>('/cabin', payload)
 }
 
 const updateCabin = async (
-    id: number,
-    payload: CabinResponseDto
+    payload: Omit<CabinResponseDto, 'deletable'>
 ): Promise<ApiResponse<string, any>> => {
-    return await api.put<string>(`/cabin/${id}`, payload)
+    return await api.put<string>(`/cabin/${payload.id}`, payload)
 }
 
 const deleteCabin = async (id: number): Promise<ApiResponse<string, any>> => {
     return await api.delete<string>(`/cabin/${id}`)
 }
 
-const getCustomers = async (): Promise<
-    ApiResponse<CustomerResponseDto[], any>
-> => {
-    return await api.get<CustomerResponseDto[]>('/customer')
-}
-
 const createCustomer = async (
-    payload: CustomerResponseDto
-): Promise<ApiResponse<CustomerResponseDto, any>> => {
+    payload: CustomerRequestDto
+): Promise<ApiResponse<CustomerRequestDto, any>> => {
     return await api.post<CustomerResponseDto>('/customer', payload)
 }
 
 const updateCustomer = async (
-    id: number,
-    payload: CustomerResponseDto
+    payload: Omit<CustomerResponseDto, 'deletable'>
 ): Promise<ApiResponse<string, any>> => {
-    return await api.put<string>(`/customer/${id}`, payload)
+    return await api.put<string>(`/customer/${payload.id}`, payload)
 }
 
 const deleteCustomer = async (
@@ -74,46 +144,8 @@ const deleteCustomer = async (
     return await api.delete<string>(`/customer/${id}`)
 }
 
-const getInvoices = async (): Promise<
-    ApiResponse<InvoiceResponseDto[], any>
-> => {
-    return await api.get<InvoiceResponseDto[]>('/invoice')
-}
-
-const createInvoice = async (
-    payload: InvoiceResponseDto
-): Promise<ApiResponse<InvoiceResponseDto, any>> => {
-    return await api.post<InvoiceResponseDto>('/invoice', payload)
-}
-
-const updateInvoice = async (
-    id: number,
-    payload: InvoiceResponseDto
-): Promise<ApiResponse<string, any>> => {
-    return await api.put<string>(`/invoice/${id}`, payload)
-}
-
 const deleteInvoice = async (id: number): Promise<ApiResponse<string, any>> => {
     return await api.delete<string>(`/invoice/${id}`)
-}
-
-const getReservations = async (): Promise<
-    ApiResponse<ReservationResponseDto[], any>
-> => {
-    return await api.get<ReservationResponseDto[]>('/reservation')
-}
-
-const createReservation = async (
-    payload: ReservationResponseDto
-): Promise<ApiResponse<ReservationResponseDto, any>> => {
-    return await api.post<ReservationResponseDto>('/reservation', payload)
-}
-
-const updateReservation = async (
-    id: number,
-    payload: ReservationResponseDto
-): Promise<ApiResponse<string, any>> => {
-    return await api.put<string>(`/reservation/${id}`, payload)
 }
 
 const deleteReservation = async (
@@ -122,25 +154,23 @@ const deleteReservation = async (
     return await api.delete<string>(`/reservation/${id}`)
 }
 
-const getUsers = async (): Promise<ApiResponse<UserResponseDto[], any>> => {
-    return await api.get<UserResponseDto[]>('/user')
+const getCustomerOptions = async (): Promise<
+    ApiResponse<SelectOption[], any>
+> => {
+    return await api.get<SelectOption[]>('/customer/options')
 }
 
-const createUser = async (
-    payload: UserResponseDto
-): Promise<ApiResponse<UserResponseDto, any>> => {
-    return await api.post<UserResponseDto>('/user', payload)
+const getCabinOptions = async (): Promise<ApiResponse<SelectOption[], any>> => {
+    return await api.get<SelectOption[]>('/cabin/options')
 }
 
-const updateUser = async (
-    id: number,
-    payload: UserResponseDto
-): Promise<ApiResponse<string, any>> => {
-    return await api.put<string>(`/user/${id}`, payload)
-}
-
-const deleteUser = async (id: number): Promise<ApiResponse<string, any>> => {
-    return await api.delete<string>(`/user/${id}`)
+const checkReservationOverlap = async (
+    payload: ReservationRequestDto
+): Promise<ApiResponse<ReservationResponseDto[], any>> => {
+    return await api.post<ReservationResponseDto[]>(
+        '/reservation/check-overlap',
+        payload
+    )
 }
 
 export const cabinApi = {
@@ -148,6 +178,7 @@ export const cabinApi = {
     createCabin,
     updateCabin,
     deleteCabin,
+    getCabinOptions,
 }
 
 export const customerApi = {
@@ -155,6 +186,7 @@ export const customerApi = {
     createCustomer,
     updateCustomer,
     deleteCustomer,
+    getCustomerOptions,
 }
 
 export const invoiceApi = {
@@ -169,11 +201,5 @@ export const reservationApi = {
     createReservation,
     updateReservation,
     deleteReservation,
-}
-
-export const userApi = {
-    getUsers,
-    createUser,
-    updateUser,
-    deleteUser,
+    checkReservationOverlap,
 }

@@ -1,50 +1,73 @@
 package com.uef.cabinapi.controller;
 
-import java.io.IOException;
-import java.io.InputStream;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-
+import org.springframework.web.bind.annotation.*;
+import com.uef.cabinapi.data.CustomerRequestDto;
+import com.uef.cabinapi.data.CustomerResponseDto;
+import com.uef.cabinapi.data.PaginatedResponseDto;
+import com.uef.cabinapi.data.PaginationDto;
+import com.uef.cabinapi.data.SelectOptionDto;
+import com.uef.cabinapi.model.Customer;
+import com.uef.cabinapi.service.CustomerService;
 
 @RestController
 @RequestMapping("api/customer")
 public class CustomerController {
-    @GetMapping
-    public String findAll() throws IOException {
-        InputStream input = new ClassPathResource("data/CustomersMock.json").getInputStream();
-        String json = new String(input.readAllBytes());
+    private final CustomerService service;
 
-        return json;
+    public CustomerController(CustomerService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public PaginatedResponseDto<List<CustomerResponseDto>> findAll(
+        @RequestParam(defaultValue = "asc") String order,
+        @RequestParam(defaultValue = "firstName") String orderBy,
+        @RequestParam(defaultValue = "10") int limit,
+        @RequestParam(defaultValue = "0") int offset
+    ) {
+        Page<CustomerResponseDto> page = service.getCustomers(order, orderBy, limit, offset);
+
+        return new PaginatedResponseDto<>(
+            page.getContent(),
+            new PaginationDto(limit, offset, page.getTotalElements())
+        );
     }
 
     @GetMapping("/{id}")
-    public String findById(@PathVariable Integer id) throws IOException {
-        return "Customer with id: " + id + " is not found";
+    public Customer findById(@PathVariable Long id) {
+        return service.getCustomerById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public String postCustomer(@RequestBody String entity) {
-        return entity;
-    }
+    public Customer postCustomer(@RequestBody CustomerRequestDto dto) {
+        Customer customer = new Customer(
+            dto.getFirstName(),
+            dto.getLastName(),
+            dto.getEmail(),
+            dto.getPhone()
+        );
 
-    @DeleteMapping("/{id}")
-    public String deleteCustomer(@PathVariable Integer id) {
-        return "Customer with id: " + id + " has been deleted";
+        return service.createCustomer(customer);
     }
 
     @PutMapping("/{id}")
-    public String putCustomer(@PathVariable Integer id, @RequestBody String entity) {
-        return "Customer with id: " + id + " has been updated";
-    }    
+    public String putCustomer(@PathVariable Long id, @RequestBody CustomerRequestDto dto) {
+        service.updateCustomer(id, dto);
+        return "Asiakas päivitetty onnistuneesti.";
+    }
 
+    @DeleteMapping("/{id}")
+    public String deleteCustomer(@PathVariable Long id) {
+        service.deleteCustomer(id);
+        return "Asiakas poistettu onnistuneesti.";
+    }
+
+    @GetMapping("/options")
+    public List<SelectOptionDto> getCustomerOptions() {
+        return service.getCustomerOptions();
+}
 }
