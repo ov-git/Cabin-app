@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "customerId": 1,
+    "cabinId": 101,
+    "startDate": "2026-05-01",
+    "endDate": "2026-05-05",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": 2,
+    "customerId": 2,
+    "cabinId": 102,
+    "startDate": "2026-06-10",
+    "endDate": "2026-06-12",
+    "status": "PENDING"
+  }
+]

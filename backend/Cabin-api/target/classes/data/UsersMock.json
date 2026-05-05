@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@cabins.com",
+    "role": "ADMIN",
+    "active": true
+  },
+  {
+    "id": 2,
+    "username": "user1",
+    "email": "user1@cabins.com",
+    "role": "USER",
+    "active": true
+  }
+]

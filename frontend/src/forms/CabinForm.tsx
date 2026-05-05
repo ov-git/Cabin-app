@@ -3,41 +3,58 @@ import {
     getCabinLabel,
     FormFieldConfig,
 } from '../types/frontendTypes'
-import { cabinActions } from '../redux/slices/cabin'
+import { cabinActions, cabinThunks } from '../redux/slices/cabin'
 import { Cancel } from '@mui/icons-material'
 import { Form } from 'react-final-form'
 import AddBoxIcon from '@mui/icons-material/AddBox'
 import { useAppDispatch, useAppSelector } from '../redux/store'
 import { Box, Button, Typography } from '@mui/material'
 import { DynamicFormField } from '../screens/common/DynamicFormField'
+import { CabinRequestDto } from '../types/endpointTypes'
 
 export const cabinFormHeaders = [
     CabinHeader.Name,
     CabinHeader.Location,
-    CabinHeader.PricePerNight,
+    CabinHeader.Price,
     CabinHeader.MaxGuests,
-    CabinHeader.Bedrooms,
-    CabinHeader.Bathrooms,
-    CabinHeader.Amenities,
-    CabinHeader.Available,
-    CabinHeader.Rating,
 ] as const
 
 export const cabinFormFields: Record<CabinHeader, FormFieldConfig> = {
     [CabinHeader.Name]: { type: 'text' },
     [CabinHeader.Location]: { type: 'text' },
-    [CabinHeader.PricePerNight]: { type: 'number' },
+    [CabinHeader.Price]: { type: 'number' },
     [CabinHeader.MaxGuests]: { type: 'number' },
-    [CabinHeader.Bedrooms]: { type: 'number' },
-    [CabinHeader.Bathrooms]: { type: 'number' },
-    [CabinHeader.Amenities]: { type: 'text' },
-    [CabinHeader.Available]: { type: 'boolean' },
-    [CabinHeader.Rating]: { type: 'number' },
+}
+
+const validateCabin = (values: Partial<CabinRequestDto>) => {
+    const errors: Partial<Record<keyof CabinRequestDto, string>> = {}
+
+    if (!values.name?.trim()) {
+        errors.name = 'Nimi on pakollinen'
+    }
+
+    if (!values.location?.trim()) {
+        errors.location = 'Sijainti on pakollinen'
+    }
+
+    if (values.price == null || Number(values.price) <= 0) {
+        errors.price = 'Hinnan täytyy olla suurempi kuin 0'
+    }
+
+    if (values.maxGuests == null || Number(values.maxGuests) <= 0) {
+        errors.maxGuests = 'Henkilömäärän täytyy olla suurempi kuin 0'
+    }
+
+    return errors
 }
 
 export const CabinForm: React.FC = () => {
     const selectedCabinId = useAppSelector(
         (state) => state.cabin.selectedCabinId
+    )
+
+    const operation = useAppSelector(
+        (state) => state.cabin.selectedCabinOperation
     )
 
     const cabins = useAppSelector((state) => state.cabin.cabins)
@@ -48,9 +65,18 @@ export const CabinForm: React.FC = () => {
         dispatch(cabinActions.resetSelectedCabinId())
     }
 
+    const handleSubmit = (data: CabinRequestDto) => {
+        if (operation === 'create') {
+            dispatch(cabinThunks.createCabin(data))
+        } else if (operation === 'update') {
+            dispatch(cabinThunks.updateCabin({ id: selectedCabinId, ...data }))
+        }
+    }
+
     return (
         <Form
-            onSubmit={() => console.log}
+            onSubmit={handleSubmit}
+            validate={validateCabin}
             initialValues={cabins.find((c) => c.id === selectedCabinId)}
             render={({ handleSubmit, form }) => {
                 return (
@@ -73,7 +99,6 @@ export const CabinForm: React.FC = () => {
                                     config={cabinFormFields[header]}
                                 />
                             ))}
-
                             <Box alignSelf={'end'}>
                                 <Button
                                     sx={{
@@ -85,7 +110,6 @@ export const CabinForm: React.FC = () => {
                                     }}
                                     color="error"
                                     onClick={handleCancel}
-                                    disabled={form.getState().invalid}
                                     type="button"
                                     startIcon={
                                         <Cancel

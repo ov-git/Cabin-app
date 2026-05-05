@@ -1,17 +1,21 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit'
 import { invoiceApi } from '../../api/api'
 import { type ThunkState } from '../store'
-import { createThunkFactory, sliceHelper } from '@kallinen/thunk-utility'
+import { createThunkFactory } from '@kallinen/thunk-utility'
 import {
     InvoiceHeader,
     CRUD,
     Pagination,
     Sorting,
 } from '../../types/frontendTypes'
-import { InvoiceResponseDto } from '../../types/endpointTypes'
+import {
+    InvoiceRequestDto,
+    InvoiceResponseDto,
+    PaginatedInvoiceResponseDto,
+} from '../../types/endpointTypes'
 import { uiActions } from './ui'
 
-const { createThunks, apiThunkFor } = createThunkFactory<ThunkState>()
+const { createThunks } = createThunkFactory<ThunkState>()
 
 export interface InvoiceState {
     loading: boolean
@@ -36,16 +40,28 @@ const initialState: InvoiceState = {
 
 export const thunks = createThunks(
     {
-        getInvoices: apiThunkFor(invoiceApi.getInvoices)(),
+        getInvoices: async (_: void, { rejectWithValue, getState }) => {
+            const sorting = getState().invoice.sorting
+            const pagination = getState().invoice.pagination
+            const response = await invoiceApi.getInvoices(sorting, pagination)
+
+            if (response.ok) {
+                return response.data
+            } else {
+                return rejectWithValue('Laskujen haku epäonnistui.')
+            }
+        },
+
         createInvoice: async (
-            invoice: InvoiceResponseDto,
+            invoice: InvoiceRequestDto,
             { rejectWithValue, dispatch }
         ) => {
             const response = await invoiceApi.createInvoice(invoice)
+
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
-                        message: 'Lasku luotu',
+                        message: 'Lasku luotu.',
                         severity: 'success',
                     })
                 )
@@ -54,11 +70,13 @@ export const thunks = createThunks(
                 return response.data
             } else return rejectWithValue('Laskun luominen epäonnistui.')
         },
+
         updateInvoice: async (
-            invoice: InvoiceResponseDto,
+            invoice: InvoiceRequestDto & { id: number },
             { rejectWithValue, dispatch }
         ) => {
-            const response = await invoiceApi.updateInvoice(invoice.id, invoice)
+            const response = await invoiceApi.updateInvoice(invoice)
+
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
@@ -71,6 +89,7 @@ export const thunks = createThunks(
                 return response.data
             } else return rejectWithValue('Laskun muokkaus epäonnistui.')
         },
+
         deleteInvoice: async (
             _: void,
             { rejectWithValue, dispatch, getState }
@@ -124,11 +143,13 @@ const invoice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        const util = sliceHelper(builder, thunks)
-
-        util.mapThunksToState('fulfilled', {
-            getInvoices: 'invoices',
-        })
+        builder.addCase(
+            thunks.getInvoices.fulfilled,
+            (state, action: PayloadAction<PaginatedInvoiceResponseDto>) => {
+                state.invoices = action.payload.data
+                state.pagination = action.payload.pagination
+            }
+        )
 
         builder.addMatcher(
             isAnyOf(

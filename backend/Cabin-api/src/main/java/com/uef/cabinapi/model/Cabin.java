@@ -1,12 +1,6 @@
 package com.uef.cabinapi.model;
-
 import java.math.BigDecimal;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "cabins")
@@ -14,14 +8,19 @@ public class Cabin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
+    private String location;
     private BigDecimal price;
+    private int maxGuests;
 
-    protected Cabin() {}//Hibernate needs this
+    protected Cabin() {}
 
-    public Cabin(String name, BigDecimal price) {
+    public Cabin(String name, String location, BigDecimal price, int maxGuests) {
         this.name = name;
+        this.location = location;
         this.price = price;
+        this.maxGuests = maxGuests;
     }
 
     public Long getId() {
@@ -36,6 +35,14 @@ public class Cabin {
         this.name = name;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public BigDecimal getPrice() {
         return price;
     }
@@ -43,5 +50,12 @@ public class Cabin {
     public void setPrice(BigDecimal price) {
         this.price = price;
     }
-    
+
+    public int getMaxGuests() {
+        return maxGuests;
+    }
+
+    public void setMaxGuests(int maxGuests) {
+        this.maxGuests = maxGuests;
+    }
 }

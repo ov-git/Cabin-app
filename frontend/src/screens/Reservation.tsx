@@ -9,6 +9,7 @@ import {
     getReservationLabel,
     reservationSortableHeaders,
     getCellText,
+    ReservationHeader,
 } from '../types/frontendTypes'
 import {
     reservationActions,
@@ -23,6 +24,7 @@ import {
     ReservationForm,
     reservationFormFields,
 } from '../forms/ReservationForm'
+import { ReservationResponseDto } from '../types/endpointTypes'
 
 const gridTemplateColumns = '1fr 1fr 1fr 1fr 1fr 40px 40px'
 
@@ -57,6 +59,7 @@ export const Reservation: React.FC = () => {
     return (
         <ScreenWrapper loading={loading} headerKey={AppRoutes.Reservation}>
             <CustomModal
+                entity="reservation"
                 operation={selectedReservationOperation}
                 open={
                     selectedReservationId >= 0 ||
@@ -130,10 +133,7 @@ const List: React.FC = () => {
                     {reservationSortableHeaders.map((header) => (
                         <Cell
                             key={header}
-                            text={getCellText(
-                                reservation[header],
-                                reservationFormFields[header]?.type
-                            )}
+                            text={getReservationCellText(reservation, header)}
                         />
                     ))}
                     <IconButton
@@ -149,6 +149,7 @@ const List: React.FC = () => {
                         size="small"
                         color="error"
                         sx={{ height: 15 }}
+                        disabled={!reservation.deletable}
                     >
                         <Delete fontSize="small" />
                     </IconButton>
@@ -178,13 +179,16 @@ const ReservationDeletion: React.FC = () => {
 
     const handleClickCancel = () =>
         dispatch(reservationActions.resetSelectedReservationId())
+
+    const handleDelete = () => dispatch(reservationThunks.deleteReservation())
+
     return (
         <Box
             display={'flex'}
             flexDirection={'column'}
             alignItems={'center'}
-            height={'100%'}
             justifyContent={'space-between'}
+            flex={1}
         >
             <Typography>
                 Haluatko varmasti poistaa varauksen "{reservation.id}?"
@@ -200,6 +204,7 @@ const ReservationDeletion: React.FC = () => {
                 </Button>
                 <Button
                     variant="outlined"
+                    onClick={handleDelete}
                     color="secondary"
                     startIcon={<Delete />}
                 >
@@ -208,4 +213,19 @@ const ReservationDeletion: React.FC = () => {
             </Box>
         </Box>
     )
+}
+
+const getReservationCellText = (
+    reservation: ReservationResponseDto,
+    header: ReservationHeader
+) => {
+    if (header === ReservationHeader.CustomerId) {
+        return `${reservation.customer.firstName} ${reservation.customer.lastName}`
+    }
+
+    if (header === ReservationHeader.CabinId) {
+        return reservation.cabin.name
+    }
+
+    return getCellText(reservation[header], reservationFormFields[header]?.type)
 }

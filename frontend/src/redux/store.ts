@@ -5,17 +5,9 @@ import customer from './slices/customer'
 import invoice from './slices/invoice'
 import reservation from './slices/reservation'
 import cabin from './slices/cabin'
-import user from './slices/user'
 export const resetStore = createAction('app/resetStore')
 
-const rootReducer = combineSlices(
-    ui,
-    customer,
-    invoice,
-    reservation,
-    cabin,
-    user
-)
+const rootReducer = combineSlices(ui, customer, invoice, reservation, cabin)
 
 export const store = configureStore({
     reducer: rootReducer,

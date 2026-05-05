@@ -1,17 +1,22 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit'
 import { cabinApi } from '../../api/api'
 import { type ThunkState } from '../store'
-import { createThunkFactory, sliceHelper } from '@kallinen/thunk-utility'
+import { createThunkFactory } from '@kallinen/thunk-utility'
 import {
     CabinHeader,
     CRUD,
     Pagination,
+    SelectOption,
     Sorting,
 } from '../../types/frontendTypes'
-import { CabinResponseDto } from '../../types/endpointTypes'
+import {
+    CabinRequestDto,
+    CabinResponseDto,
+    PaginatedCabinResponseDto,
+} from '../../types/endpointTypes'
 import { uiActions } from './ui'
 
-const { createThunks, apiThunkFor } = createThunkFactory<ThunkState>()
+const { createThunks } = createThunkFactory<ThunkState>()
 
 export interface CabinState {
     loading: boolean
@@ -20,12 +25,14 @@ export interface CabinState {
     selectedCabinOperation: CRUD | null
     sorting: Sorting
     pagination: Pagination
+    cabinOptions: SelectOption[]
 }
 
 const initialState: CabinState = {
     loading: false,
     cabins: [],
     selectedCabinId: -1,
+    cabinOptions: [],
     selectedCabinOperation: null,
     sorting: {
         order: 'desc',
@@ -36,9 +43,18 @@ const initialState: CabinState = {
 
 export const thunks = createThunks(
     {
-        getCabins: apiThunkFor(cabinApi.getCabins)(),
+        getCabins: async (_: void, { rejectWithValue, getState }) => {
+            const sorting = getState().cabin.sorting
+            const pagination = getState().cabin.pagination
+            const response = await cabinApi.getCabins(sorting, pagination)
+            if (response.ok) {
+                return response.data
+            } else {
+                return rejectWithValue('Mökkien haku epäonnistui')
+            }
+        },
         createCabin: async (
-            cabin: CabinResponseDto,
+            cabin: CabinRequestDto,
             { rejectWithValue, dispatch }
         ) => {
             const response = await cabinApi.createCabin(cabin)
@@ -55,10 +71,10 @@ export const thunks = createThunks(
             } else return rejectWithValue('Mökin luominen epäonnistui.')
         },
         updateCabin: async (
-            cabin: CabinResponseDto,
+            cabin: Omit<CabinResponseDto, 'deletable'>,
             { rejectWithValue, dispatch }
         ) => {
-            const response = await cabinApi.updateCabin(cabin.id, cabin)
+            const response = await cabinApi.updateCabin(cabin)
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
@@ -78,7 +94,6 @@ export const thunks = createThunks(
             const selected = getState().cabin.selectedCabinId
             const response = await cabinApi.deleteCabin(selected)
             if (response.ok) {
-                console
                 dispatch(
                     uiActions.setNotification({
                         message: response.data,
@@ -89,6 +104,15 @@ export const thunks = createThunks(
                 dispatch(thunks.getCabins())
                 return response.data
             } else return rejectWithValue('Mökin poisto epäonnistui.')
+        },
+        getCabinOptions: async (_: void, { rejectWithValue }) => {
+            const response = await cabinApi.getCabinOptions()
+
+            if (response.ok) {
+                return response.data
+            } else {
+                return rejectWithValue('Mökkivalintojen haku epäonnistui.')
+            }
         },
     },
     'cabin'
@@ -123,18 +147,27 @@ const cabin = createSlice({
         },
     },
     extraReducers: (builder) => {
-        const util = sliceHelper(builder, thunks)
-
-        util.mapThunksToState('fulfilled', {
-            getCabins: 'cabins',
-        })
+        builder.addCase(
+            thunks.getCabins.fulfilled,
+            (state, action: PayloadAction<PaginatedCabinResponseDto>) => {
+                state.cabins = action.payload.data
+                state.pagination = action.payload.pagination
+            }
+        )
+        builder.addCase(
+            thunks.getCabinOptions.fulfilled,
+            (state, action: PayloadAction<SelectOption[]>) => {
+                state.cabinOptions = action.payload
+            }
+        )
 
         builder.addMatcher(
             isAnyOf(
                 thunks.getCabins.pending,
                 thunks.createCabin.pending,
                 thunks.updateCabin.pending,
-                thunks.deleteCabin.pending
+                thunks.deleteCabin.pending,
+                thunks.getCabinOptions.pending
             ),
             (state) => {
                 state.loading = true
@@ -150,7 +183,9 @@ const cabin = createSlice({
                 thunks.updateCabin.rejected,
                 thunks.updateCabin.fulfilled,
                 thunks.deleteCabin.rejected,
-                thunks.deleteCabin.fulfilled
+                thunks.deleteCabin.fulfilled,
+                thunks.getCabinOptions.fulfilled,
+                thunks.getCabinOptions.rejected
             ),
             (state) => {
                 state.loading = false

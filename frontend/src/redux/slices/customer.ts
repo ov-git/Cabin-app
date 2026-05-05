@@ -1,21 +1,27 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit'
 import { customerApi } from '../../api/api'
 import { type ThunkState } from '../store'
-import { createThunkFactory, sliceHelper } from '@kallinen/thunk-utility'
+import { createThunkFactory } from '@kallinen/thunk-utility'
 import {
     CustomerHeader,
     CRUD,
     Pagination,
     Sorting,
+    SelectOption,
 } from '../../types/frontendTypes'
-import { CustomerResponseDto } from '../../types/endpointTypes'
+import {
+    CustomerRequestDto,
+    CustomerResponseDto,
+    PaginatedCustomerResponseDto,
+} from '../../types/endpointTypes'
 import { uiActions } from './ui'
 
-const { createThunks, apiThunkFor } = createThunkFactory<ThunkState>()
+const { createThunks } = createThunkFactory<ThunkState>()
 
 export interface CustomerState {
     loading: boolean
     customers: CustomerResponseDto[]
+    customerOptions: SelectOption[]
     selectedCustomerId: number
     selectedCustomerOperation: CRUD | null
     sorting: Sorting
@@ -25,6 +31,7 @@ export interface CustomerState {
 const initialState: CustomerState = {
     loading: false,
     customers: [],
+    customerOptions: [],
     selectedCustomerId: -1,
     selectedCustomerOperation: null,
     sorting: {
@@ -36,16 +43,27 @@ const initialState: CustomerState = {
 
 export const thunks = createThunks(
     {
-        getCustomers: apiThunkFor(customerApi.getCustomers)(),
+        getCustomers: async (_: void, { rejectWithValue, getState }) => {
+            const sorting = getState().customer.sorting
+            const pagination = getState().customer.pagination
+            const response = await customerApi.getCustomers(sorting, pagination)
+
+            if (response.ok) {
+                return response.data
+            } else {
+                return rejectWithValue('Asiakkaiden haku epäonnistui.')
+            }
+        },
         createCustomer: async (
-            customer: CustomerResponseDto,
+            customer: CustomerRequestDto,
             { rejectWithValue, dispatch }
         ) => {
             const response = await customerApi.createCustomer(customer)
+
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
-                        message: 'Asiakas luotu',
+                        message: 'Asiakas luotu.',
                         severity: 'success',
                     })
                 )
@@ -55,13 +73,11 @@ export const thunks = createThunks(
             } else return rejectWithValue('Asiakkaan luominen epäonnistui.')
         },
         updateCustomer: async (
-            customer: CustomerResponseDto,
+            customer: Omit<CustomerResponseDto, 'deletable'>,
             { rejectWithValue, dispatch }
         ) => {
-            const response = await customerApi.updateCustomer(
-                customer.id,
-                customer
-            )
+            const response = await customerApi.updateCustomer(customer)
+
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
@@ -92,6 +108,15 @@ export const thunks = createThunks(
                 dispatch(thunks.getCustomers())
                 return response.data
             } else return rejectWithValue('Asiakkaan poisto epäonnistui.')
+        },
+        getCustomerOptions: async (_: void, { rejectWithValue }) => {
+            const response = await customerApi.getCustomerOptions()
+
+            if (response.ok) {
+                return response.data
+            } else {
+                return rejectWithValue('Asiakasvalintojen haku epäonnistui.')
+            }
         },
     },
     'customer'
@@ -127,18 +152,26 @@ const customer = createSlice({
         },
     },
     extraReducers: (builder) => {
-        const util = sliceHelper(builder, thunks)
-
-        util.mapThunksToState('fulfilled', {
-            getCustomers: 'customers',
-        })
-
+        builder.addCase(
+            thunks.getCustomers.fulfilled,
+            (state, action: PayloadAction<PaginatedCustomerResponseDto>) => {
+                state.customers = action.payload.data
+                state.pagination = action.payload.pagination
+            }
+        )
+        builder.addCase(
+            thunks.getCustomerOptions.fulfilled,
+            (state, action: PayloadAction<SelectOption[]>) => {
+                state.customerOptions = action.payload
+            }
+        )
         builder.addMatcher(
             isAnyOf(
                 thunks.getCustomers.pending,
                 thunks.createCustomer.pending,
                 thunks.updateCustomer.pending,
-                thunks.deleteCustomer.pending
+                thunks.deleteCustomer.pending,
+                thunks.getCustomerOptions.pending
             ),
             (state) => {
                 state.loading = true
@@ -154,7 +187,9 @@ const customer = createSlice({
                 thunks.updateCustomer.rejected,
                 thunks.updateCustomer.fulfilled,
                 thunks.deleteCustomer.rejected,
-                thunks.deleteCustomer.fulfilled
+                thunks.deleteCustomer.fulfilled,
+                thunks.getCustomerOptions.rejected,
+                thunks.getCustomerOptions.fulfilled
             ),
             (state) => {
                 state.loading = false

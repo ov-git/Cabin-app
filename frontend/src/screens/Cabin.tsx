@@ -18,7 +18,7 @@ import { CustomModal } from './common/CustomModal'
 import { Add, Cancel, Delete, Edit } from '@mui/icons-material'
 import { CabinForm, cabinFormFields } from '../forms/CabinForm'
 
-const gridTemplateColumns = '2.5fr 2fr 1fr 1fr .5fr .5fr 3fr 1fr .8fr 40px 40px'
+const gridTemplateColumns = '1.5fr 1.5fr 1fr 1fr 40px 40px'
 
 export const Cabin: React.FC = () => {
     const dispatch = useAppDispatch()
@@ -51,6 +51,7 @@ export const Cabin: React.FC = () => {
                     selectedCabinId >= 0 || selectedCabinOperation === 'create'
                 }
                 onClose={handleCloseModal}
+                entity="cabin"
             >
                 {selectedCabinOperation === 'delete' ? (
                     <CabinDeletion />
@@ -135,6 +136,7 @@ const List: React.FC = () => {
                     </IconButton>
                     <IconButton
                         onClick={handleSelect(cabin.id, 'delete')}
+                        disabled={!cabin.deletable}
                         size="small"
                         color="error"
                         sx={{ height: 15 }}
@@ -171,7 +173,6 @@ const CabinDeletion: React.FC = () => {
             display={'flex'}
             flexDirection={'column'}
             alignItems={'center'}
-            height={'100%'}
             justifyContent={'space-between'}
             flex={1}
         >

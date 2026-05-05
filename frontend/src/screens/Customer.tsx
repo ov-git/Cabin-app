@@ -51,6 +51,7 @@ export const Customer: React.FC = () => {
     return (
         <ScreenWrapper loading={loading} headerKey={AppRoutes.Customer}>
             <CustomModal
+                entity="customer"
                 operation={selectedCustomerOperation}
                 open={
                     selectedCustomerId >= 0 ||
@@ -140,6 +141,7 @@ const List: React.FC = () => {
                     </IconButton>
                     <IconButton
                         onClick={handleSelect(customer.id, 'delete')}
+                        disabled={!customer.deletable}
                         size="small"
                         color="error"
                         sx={{ height: 15 }}
@@ -169,13 +171,16 @@ const CustomerDeletion: React.FC = () => {
 
     const handleClickCancel = () =>
         dispatch(customerActions.resetSelectedCustomerId())
+
+    const handleDelete = () => dispatch(customerThunks.deleteCustomer())
+
     return (
         <Box
             display={'flex'}
             flexDirection={'column'}
             alignItems={'center'}
-            height={'100%'}
             justifyContent={'space-between'}
+            flex={1}
         >
             <Typography>
                 Haluatko varmasti poistaa asiakkaan "
@@ -192,6 +197,7 @@ const CustomerDeletion: React.FC = () => {
                 </Button>
                 <Button
                     variant="outlined"
+                    onClick={handleDelete}
                     color="secondary"
                     startIcon={<Delete />}
                 >

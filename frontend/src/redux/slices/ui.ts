@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { type ThunkState } from '../store'
 import { createThunkFactory } from '@kallinen/thunk-utility'
-import { ExampleResponseDto } from '../../types/endpointTypes'
 import { NotificationMessage } from '../../types/frontendTypes'
 
 const { createThunks } = createThunkFactory<ThunkState>()
@@ -9,13 +8,11 @@ const { createThunks } = createThunkFactory<ThunkState>()
 export interface UiState {
     loading: boolean
     notification: NotificationMessage | null
-    someData: ExampleResponseDto[]
 }
 
 const initialState: UiState = {
     loading: false,
     notification: null,
-    someData: [],
 }
 
 const thunks = createThunks(
@@ -36,21 +33,6 @@ const ui = createSlice({
             state.notification = action.payload
         },
     },
-    // extraReducers: (builder) => {
-    //     const util = sliceHelper(builder, thunks)
-    //     util.mapThunksToState('fulfilled', {
-    //         getData: 'someData',
-    //     })
-    //     builder.addMatcher(isAnyOf(thunks.getData.pending), (state) => {
-    //         state.loading = true
-    //     })
-    //     builder.addMatcher(
-    //         isAnyOf(thunks.getData.rejected, thunks.getData.fulfilled),
-    //         (state) => {
-    //             state.loading = false
-    //         }
-    //     )
-    // },
 })
 
 export default ui

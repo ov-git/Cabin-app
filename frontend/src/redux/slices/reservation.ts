@@ -1,17 +1,21 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit'
 import { reservationApi } from '../../api/api'
 import { type ThunkState } from '../store'
-import { createThunkFactory, sliceHelper } from '@kallinen/thunk-utility'
+import { createThunkFactory } from '@kallinen/thunk-utility'
 import {
     ReservationHeader,
     CRUD,
     Pagination,
     Sorting,
 } from '../../types/frontendTypes'
-import { ReservationResponseDto } from '../../types/endpointTypes'
+import {
+    PaginatedReservationResponseDto,
+    ReservationRequestDto,
+    ReservationResponseDto,
+} from '../../types/endpointTypes'
 import { uiActions } from './ui'
 
-const { createThunks, apiThunkFor } = createThunkFactory<ThunkState>()
+const { createThunks } = createThunkFactory<ThunkState>()
 
 export interface ReservationState {
     loading: boolean
@@ -20,6 +24,7 @@ export interface ReservationState {
     selectedReservationOperation: CRUD | null
     sorting: Sorting
     pagination: Pagination
+    overlappingReservations: ReservationResponseDto[]
 }
 
 const initialState: ReservationState = {
@@ -32,20 +37,36 @@ const initialState: ReservationState = {
         orderBy: ReservationHeader.StartDate,
     },
     pagination: { count: 10, limit: 10, offset: 0, total: 0 },
+    overlappingReservations: [],
 }
 
 export const thunks = createThunks(
     {
-        getReservations: apiThunkFor(reservationApi.getReservations)(),
+        getReservations: async (_: void, { rejectWithValue, getState }) => {
+            const sorting = getState().reservation.sorting
+            const pagination = getState().reservation.pagination
+            const response = await reservationApi.getReservations(
+                sorting,
+                pagination
+            )
+
+            if (response.ok) {
+                return response.data
+            } else {
+                return rejectWithValue('Varausten haku epäonnistui.')
+            }
+        },
+
         createReservation: async (
-            reservation: ReservationResponseDto,
+            reservation: ReservationRequestDto,
             { rejectWithValue, dispatch }
         ) => {
             const response = await reservationApi.createReservation(reservation)
+
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
-                        message: 'Varaus luotu',
+                        message: 'Varaus luotu.',
                         severity: 'success',
                     })
                 )
@@ -54,14 +75,13 @@ export const thunks = createThunks(
                 return response.data
             } else return rejectWithValue('Varauksen luominen epäonnistui.')
         },
+
         updateReservation: async (
-            reservation: ReservationResponseDto,
+            reservation: ReservationRequestDto & { id: number },
             { rejectWithValue, dispatch }
         ) => {
-            const response = await reservationApi.updateReservation(
-                reservation.id,
-                reservation
-            )
+            const response = await reservationApi.updateReservation(reservation)
+
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
@@ -74,6 +94,7 @@ export const thunks = createThunks(
                 return response.data
             } else return rejectWithValue('Varauksen muokkaus epäonnistui.')
         },
+
         deleteReservation: async (
             _: void,
             { rejectWithValue, dispatch, getState }
@@ -93,6 +114,20 @@ export const thunks = createThunks(
                 return response.data
             } else return rejectWithValue('Varauksen poisto epäonnistui.')
         },
+        checkReservationOverlap: async (
+            reservation: ReservationRequestDto,
+            { rejectWithValue }
+        ) => {
+            const response = await reservationApi.checkReservationOverlap(
+                reservation
+            )
+
+            if (response.ok) {
+                return response.data
+            } else {
+                return rejectWithValue('Varausten tarkistus epäonnistui.')
+            }
+        },
     },
     'reservation'
 )
@@ -101,6 +136,9 @@ const reservation = createSlice({
     name: 'reservation',
     initialState,
     reducers: {
+        resetOverlappingReservations: (state) => {
+            state.overlappingReservations = []
+        },
         setSorting: (state, action: PayloadAction<Sorting>) => {
             state.sorting = action.payload
         },
@@ -127,18 +165,26 @@ const reservation = createSlice({
         },
     },
     extraReducers: (builder) => {
-        const util = sliceHelper(builder, thunks)
-
-        util.mapThunksToState('fulfilled', {
-            getReservations: 'reservations',
-        })
-
+        builder.addCase(
+            thunks.getReservations.fulfilled,
+            (state, action: PayloadAction<PaginatedReservationResponseDto>) => {
+                state.reservations = action.payload.data
+                state.pagination = action.payload.pagination
+            }
+        )
+        builder.addCase(
+            thunks.checkReservationOverlap.fulfilled,
+            (state, action: PayloadAction<ReservationResponseDto[]>) => {
+                state.overlappingReservations = action.payload
+            }
+        )
         builder.addMatcher(
             isAnyOf(
                 thunks.getReservations.pending,
                 thunks.createReservation.pending,
                 thunks.updateReservation.pending,
-                thunks.deleteReservation.pending
+                thunks.deleteReservation.pending,
+                thunks.checkReservationOverlap.pending
             ),
             (state) => {
                 state.loading = true
@@ -154,7 +200,9 @@ const reservation = createSlice({
                 thunks.updateReservation.rejected,
                 thunks.updateReservation.fulfilled,
                 thunks.deleteReservation.rejected,
-                thunks.deleteReservation.fulfilled
+                thunks.deleteReservation.fulfilled,
+                thunks.checkReservationOverlap.fulfilled,
+                thunks.checkReservationOverlap.rejected
             ),
             (state) => {
                 state.loading = false
