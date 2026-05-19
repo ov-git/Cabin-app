@@ -61,7 +61,7 @@ export const thunks = createThunks(
             if (response.ok) {
                 dispatch(
                     uiActions.setNotification({
-                        message: 'Käyttäjä luotu.',
+                        message: 'Mökki luotu.',
                         severity: 'success',
                     })
                 )
