@@ -33,7 +33,7 @@ http://localhost:5173
 - Docker
 
 ```bash
-docker compose-up --build
+docker compose up --build
 ```
 
 Endpoint dokumentaatio: http://localhost:8080/swagger-ui/index.html
