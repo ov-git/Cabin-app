@@ -1,0 +1,70 @@
+{
+  "common": {
+    "cancel": "Peruuta",
+    "save": "Tallenna",
+    "save_and_exit": "Tallenna ja poistu",
+    "add": "Lisää uusi"
+  },
+  "cabin": {
+    "management": "Mökkien hallinta",
+    "add_new": "Lisää uusi mökki",
+    "name": "Nimi",
+    "location": "Sijainti",
+    "price_per_night": "Hinta/yö",
+    "max_capacity": "Max hlö",
+    "bedrooms": "MH",
+    "bathrooms": "KH",
+    "amenities": "Mukavuudet",
+    "availability": "Saatavuus",
+    "ratings": "Arvostelut",
+    "search_failed": "Mökkien haku epäonnistui",
+    "created": "Mökki luotu.",
+    "creation_failed": "Mökin luominen epäonnistui.",
+    "edit_failed": "Mökin muokkaus epäonnistui.",
+    "deletion_failed": "Mökin poisto epäonnistui."
+  },
+  "customer": {
+    "list": "Asiakkaat",
+    "management": "Asiakkaiden hallinta",
+    "add_new": "Lisää asiakas",
+    "first_name": "Etunimi",
+    "second_name": "Sukunimi",
+    "email": "Sähköposti",
+    "phone": "Puhelin",
+    "search_failed": "Asiakkaiden haku epäonnistui.",
+    "created": "Asiakas luotu.",
+    "creation_failed": "Asiakkaan luominen epäonnistui.",
+    "edit_failed": "Asiakkaan muokkaus epäonnistui.",
+    "deletion_failed": "Asiakkaan poisto epäonnistui."
+  },
+  "invoice": {
+    "list": "Laskut",
+    "management": "Laskujen hallinta",
+    "add_new": "Luo uusi lasku",
+    "customer": "Asiakas",
+    "reservation": "Varaus",
+    "sum": "Summa",
+    "status": "Tila",
+    "date": "Päiväys",
+    "expiration_date": "Eräpäivä",
+    "search_failed": "Laskujen haku epäonnistui.",
+    "created": "Lasku luotu.",
+    "creation_failed": "Laskun luominen epäonnistui.",
+    "edit_failed": "Laskun muokkaus epäonnistui.",
+    "deletion_failed": "Laskun poisto epäonnistui."
+  },
+  "reservation": {
+    "list": "Varaukset",
+    "management": "Varausten hallinta",
+    "add_new": "Lisää varaus",
+    "cabin": "Mökki",
+    "arrival_date": "Alkaa",
+    "departure_date": "Päättyy",
+    "search_failed": "Varausten haku epäonnistui.",
+    "created": "Varaus luotu.",
+    "creation_failed": "Varauksen luominen epäonnistui.",
+    "edit_failed": "Varauksen muokkaus epäonnistui.",
+    "deletion_failed": "Varauksen poisto epäonnistui.",
+    "check_overlap": "Varausten tarkistus epäonnistui."
+  }
+}
